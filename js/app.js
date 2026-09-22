@@ -3,6 +3,42 @@
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // --- AUTHENTICATION & PIN LOCK ---
+  const DEFAULT_PIN = "1234"; // Puedes cambiar esta clave por defecto
+  const authScreen = document.getElementById('auth-screen');
+  const authForm = document.getElementById('auth-form');
+  const authPinInput = document.getElementById('auth-pin-input');
+  const authErrorMsg = document.getElementById('auth-error-msg');
+
+  function checkAuth() {
+    const isUnlocked = localStorage.getItem('app_unlocked');
+    if (isUnlocked === 'true') {
+      if (authScreen) authScreen.style.display = 'none';
+    } else {
+      if (authScreen) authScreen.style.display = 'flex';
+    }
+  }
+
+  if (authForm) {
+    authForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const enteredPin = authPinInput.value.trim();
+      const savedPin = localStorage.getItem('app_family_pin') || DEFAULT_PIN;
+
+      if (enteredPin === savedPin) {
+        localStorage.setItem('app_unlocked', 'true');
+        authScreen.style.display = 'none';
+        authErrorMsg.style.display = 'none';
+      } else {
+        authErrorMsg.style.display = 'block';
+        authPinInput.value = '';
+        authPinInput.focus();
+      }
+    });
+  }
+
+  checkAuth();
+
   // Initialize Core Services
   const store = window.store;
   let stlViewerInstance = null;
