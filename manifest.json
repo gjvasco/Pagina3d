@@ -1,0 +1,17 @@
+{
+  "name": "3D Print Hub - Control de Impresión 3D",
+  "short_name": "3DPrintHub",
+  "description": "Aplicación de gestión y control de impresoras 3D, filamentos, trabajos, visor STL 3D y ventas.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0d14",
+  "theme_color": "#00f2fe",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a0d14'/><path d='M50 15 L85 35 L85 65 L50 85 L15 65 L15 35 Z' fill='none' stroke='%2300f2fe' stroke-width='6'/><path d='M50 15 L50 85 M15 35 L85 65 M85 35 L15 65' stroke='%237928ca' stroke-width='4'/></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
