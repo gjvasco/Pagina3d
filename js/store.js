@@ -93,7 +93,7 @@ class Store {
     this.initSupabase();
   }
 
-"  initSupabase() {
+  initSupabase() {
     try {
       const cfgRaw = localStorage.getItem(SUPABASE_CONFIG_KEY);
       if (cfgRaw) {

@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const enteredPin = authPinInput.value.trim();
       const savedPin = localStorage.getItem('app_family_pin') || DEFAULT_PIN;
 
-"      if (enteredPin === savedPin || enteredPin === DEFAULT_PIN) {
+      if (enteredPin === savedPin || enteredPin === DEFAULT_PIN) {
         localStorage.setItem('app_unlocked', 'true');
         authScreen.style.display = 'none';
         authErrorMsg.style.display = 'none';
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         authErrorMsg.style.display = 'block';
         authPinInput.value = '';
         authPinInput.focus();
-      }"
+      }
     });
   }
 
@@ -590,7 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-"  // Initial Boot
+  // Initial Boot
   setupModals();
   if (store.useSupabase) {
     store.syncFromSupabase()
@@ -598,5 +598,5 @@ document.addEventListener('DOMContentLoaded', () => {
       .finally(() => navigateTo('dashboard'));
   } else {
     navigateTo('dashboard');
-  }"
+  }
 });

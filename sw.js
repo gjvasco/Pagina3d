@@ -2,7 +2,7 @@
    3D PRINT HUB - SERVICE WORKER FOR PWA OFFLINE CAPABILITY
    ========================================================================== */
 
-const CACHE_NAME = '3d-print-hub-v5';
+const CACHE_NAME = '3d-print-hub-v6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
