@@ -1,0 +1,12 @@
+{
+  "name": "pagina3d",
+  "version": "1.0.0",
+  "description": "3D Print Hub",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
