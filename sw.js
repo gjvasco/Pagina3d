@@ -2,7 +2,7 @@
    3D PRINT HUB - SERVICE WORKER FOR PWA OFFLINE CAPABILITY
    ========================================================================== */
 
-const CACHE_NAME = '3d-print-hub-v1';
+const CACHE_NAME = '3d-print-hub-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -24,7 +24,7 @@ self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
 
-// Activate Event
+// Activate Event - Delete ALL old caches
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
@@ -38,12 +38,21 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
-// Fetch Event (Cache First with Network Fallback)
+// Fetch Event (Network First with Cache Fallback)
 self.addEventListener('fetch', (e) => {
   e.respondWith(
-    caches.match(e.request).then((cachedResponse) => {
-      if (cachedResponse) return cachedResponse;
-      return fetch(e.request);
-    })
+    fetch(e.request)
+      .then((networkResponse) => {
+        // Clone and update cache with fresh response
+        const clone = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(e.request, clone);
+        });
+        return networkResponse;
+      })
+      .catch(() => {
+        // Offline fallback: serve from cache
+        return caches.match(e.request);
+      })
   );
 });
