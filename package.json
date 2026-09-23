@@ -1,13 +1,6 @@
 {
   "name": "pagina3d",
   "version": "1.0.0",
-  "description": "3D Print Hub",
-  "main": "server.js",
-  "scripts": {
-    "build": "echo 'Static site, no build step required'",
-    "start": "node server.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "private": true,
+  "description": "3D Print Hub"
 }
