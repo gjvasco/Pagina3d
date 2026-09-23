@@ -13,76 +13,10 @@ const DEMO_DATA = {
     defaultMargin: 40,
     currencySymbol: '$'
   },
-  printers: [
-    {
-      id: 'p1',
-      name: 'Bambu Lab X1-Carbon',
-      type: 'FDM',
-      status: 'imprimiendo',
-      nozzleSize: 0.4,
-      buildVolume: '256 x 256 x 256 mm',
-      wattage: 350,
-      totalHours: 142.5,
-      notes: 'Boquilla de acero endurecido para Filamentos con Fibra de Carbono'
-    },
-    {
-      id: 'p2',
-      name: 'Ender 3 V2 Neo',
-      type: 'FDM',
-      status: 'inactiva',
-      nozzleSize: 0.4,
-      buildVolume: '220 x 220 x 250 mm',
-      wattage: 200,
-      totalHours: 285.0,
-      notes: 'Instalado nivelador automático CR Touch'
-    }
-  ],
-  spools: [
-    {
-      id: 's1',
-      name: 'eSUN PLA+ Negro',
-      type: 'PLA',
-      brand: 'eSUN',
-      color: '#1a1a1a',
-      initialWeight: 1000,
-      remainingWeight: 680,
-      cost: 22.00
-    },
-    {
-      id: 's2',
-      name: 'Sunlu PETG Cyan Neón',
-      type: 'PETG',
-      brand: 'Sunlu',
-      color: '#00f2fe',
-      initialWeight: 1000,
-      remainingWeight: 420,
-      cost: 25.50
-    }
-  ],
-  jobs: [
-    {
-      id: 'j1',
-      title: 'Soporte Articulado de Monitor',
-      printerId: 'p1',
-      spoolId: 's1',
-      weightGrams: 240,
-      printTimeHours: 6.5,
-      status: 'completado',
-      date: '2026-09-20'
-    }
-  ],
-  sales: [
-    {
-      id: 'v1',
-      jobTitle: 'Soporte Articulado de Monitor',
-      clientName: 'Carlos Mendoza',
-      salePrice: 35.00,
-      totalCost: 12.80,
-      profit: 22.20,
-      paymentStatus: 'pagado',
-      date: '2026-09-21'
-    }
-  ]
+  printers: [],
+  spools: [],
+  jobs: [],
+  sales: []
 };
 
 const DEFAULT_SUPABASE_CONFIG = {
@@ -549,10 +483,23 @@ class Store {
         }
         return true;
       }
-      return false;
     } catch (e) {
       console.error('Error al importar datos JSON:', e);
       return false;
+    }
+  }
+
+  async clearAllData() {
+    this.data = {
+      settings: DEMO_DATA.settings,
+      printers: [],
+      spools: [],
+      jobs: [],
+      sales: []
+    };
+    this.saveLocalStorageData();
+    if (this.useSupabase) {
+      await this.replaceSupabaseWithLocalData();
     }
   }
 }

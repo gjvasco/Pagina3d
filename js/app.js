@@ -565,6 +565,15 @@ document.addEventListener('DOMContentLoaded', () => {
       reader.readAsText(file);
     });
 
+    document.getElementById('btn-reset-data')?.addEventListener('click', async () => {
+      if (confirm('🚨 ¡ATENCIÓN! Esto eliminará TODA la información (impresoras, filamentos, trabajos, ventas) localmente y en la nube de Supabase. ¿Deseas continuar?')) {
+        await store.clearAllData();
+        alert('🗑️ Se han eliminado todos los datos correctamente.');
+        closeModal();
+        location.reload();
+      }
+    });
+
     document.getElementById('form-printer')?.addEventListener('submit', (e) => {
       e.preventDefault();
       store.addPrinter({
