@@ -4,6 +4,7 @@
   "description": "3D Print Hub",
   "main": "server.js",
   "scripts": {
+    "build": "echo 'Static site, no build step required'",
     "start": "node server.js"
   },
   "keywords": [],
