@@ -193,11 +193,88 @@ class Store {
     }
   }
 
+  async pushAllToSupabase() {
+    if (!this.useSupabase || !this.supabase) return false;
+
+    try {
+      if (this.data.printers && this.data.printers.length > 0) {
+        const pRows = this.data.printers.map(p => ({
+          id: p.id,
+          name: p.name,
+          type: p.type,
+          status: p.status,
+          nozzle_size: p.nozzleSize,
+          build_volume: p.buildVolume,
+          wattage: p.wattage,
+          total_hours: p.totalHours,
+          notes: p.notes || ''
+        }));
+        await this.supabase.from('printers').upsert(pRows, { onConflict: 'id' });
+      }
+
+      if (this.data.spools && this.data.spools.length > 0) {
+        const sRows = this.data.spools.map(s => ({
+          id: s.id,
+          name: s.name,
+          type: s.type,
+          brand: s.brand,
+          color: s.color,
+          initial_weight: s.initialWeight,
+          remaining_weight: s.remainingWeight,
+          cost: s.cost
+        }));
+        await this.supabase.from('spools').upsert(sRows, { onConflict: 'id' });
+      }
+
+      if (this.data.jobs && this.data.jobs.length > 0) {
+        const jRows = this.data.jobs.map(j => ({
+          id: j.id,
+          title: j.title,
+          printer_id: j.printerId,
+          spool_id: j.spoolId,
+          weight_grams: j.weightGrams,
+          print_time_hours: j.printTimeHours,
+          status: j.status,
+          failure_reason: j.failureReason || '',
+          date: j.date || new Date().toISOString().split('T')[0]
+        }));
+        await this.supabase.from('jobs').upsert(jRows, { onConflict: 'id' });
+      }
+
+      if (this.data.sales && this.data.sales.length > 0) {
+        const vRows = this.data.sales.map(v => ({
+          id: v.id,
+          job_title: v.jobTitle,
+          client_name: v.clientName,
+          sale_price: v.salePrice,
+          total_cost: v.totalCost,
+          profit: v.profit,
+          payment_status: v.paymentStatus,
+          date: v.date || new Date().toISOString().split('T')[0]
+        }));
+        await this.supabase.from('sales').upsert(vRows, { onConflict: 'id' });
+      }
+
+      console.log('⚡ ¡Todos los datos locales subidos a Supabase con éxito!');
+      return true;
+    } catch (e) {
+      console.error('Error al subir datos a Supabase:', e);
+      return false;
+    }
+  }
+
+  async syncAllWithSupabase() {
+    if (!this.useSupabase || !this.supabase) return false;
+    await this.pushAllToSupabase();
+    await this.syncFromSupabase();
+    return true;
+  }
+
   async saveSupabaseCredentials(url, key) {
     localStorage.setItem(SUPABASE_CONFIG_KEY, JSON.stringify({ url, key }));
     this.initSupabase();
     if (this.useSupabase) {
-      await this.syncFromSupabase();
+      await this.syncAllWithSupabase();
     }
   }
 

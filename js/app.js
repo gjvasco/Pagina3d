@@ -456,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-"    // Form Submissions
+    // Form Submissions
     document.getElementById('form-supabase')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const url = document.getElementById('supabase-url').value.trim();
@@ -465,7 +465,32 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('⚡ ¡Base de datos Supabase conectada y datos sincronizados!');
       closeModal();
       location.reload();
-    });"
+    });
+
+    document.getElementById('btn-force-sync')?.addEventListener('click', async () => {
+      const url = document.getElementById('supabase-url').value.trim();
+      const key = document.getElementById('supabase-key').value.trim();
+      if (url && key) {
+        store.saveSupabaseCredentials(url, key);
+      }
+      if (!store.useSupabase) {
+        alert('Ingresa primero la URL y Key de Supabase.');
+        return;
+      }
+      const btn = document.getElementById('btn-force-sync');
+      btn.disabled = true;
+      btn.textContent = 'Subiendo a la nube...';
+      const success = await store.syncAllWithSupabase();
+      btn.disabled = false;
+      btn.textContent = '☁️ Subir Datos Locales a Supabase';
+      if (success) {
+        alert('⚡ ¡Tus datos locales (impresoras, filamentos, trabajos, ventas) se han subido a Supabase con éxito!');
+        closeModal();
+        location.reload();
+      } else {
+        alert('❌ Error al subir a Supabase. Verifica las tablas de tu proyecto.');
+      }
+    });
 
     document.getElementById('form-printer')?.addEventListener('submit', (e) => {
       e.preventDefault();
