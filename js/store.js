@@ -181,6 +181,25 @@ class Store {
     }
   }
 
+  updatePrinter(id, updates) {
+    const printer = this.getPrinter(id);
+    if (!printer) return;
+    Object.assign(printer, updates);
+    this.saveLocalStorageData();
+
+    if (this.useSupabase) {
+      this.supabase.from('printers').update({
+        name: printer.name,
+        type: printer.type,
+        status: printer.status,
+        nozzle_size: printer.nozzleSize,
+        build_volume: printer.buildVolume,
+        wattage: printer.wattage,
+        total_hours: printer.totalHours
+      }).eq('id', id).then();
+    }
+  }
+
   // --- FILAMENTOS ---
   getSpools() { return this.data.spools; }
   getSpool(id) { return this.data.spools.find(s => s.id === id); }

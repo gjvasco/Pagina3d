@@ -220,6 +220,22 @@ document.addEventListener('DOMContentLoaded', () => {
     `).join('') || '<p class="text-muted">No hay impresoras registradas.</p>';
 
     // Bind Printer Actions
+    document.querySelectorAll('.edit-printer-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const printer = store.getPrinter(btn.getAttribute('data-id'));
+        if (!printer) return;
+        document.getElementById('edit-printer-id').value = printer.id;
+        document.getElementById('edit-printer-name').value = printer.name;
+        document.getElementById('edit-printer-type').value = printer.type;
+        document.getElementById('edit-printer-status').value = printer.status;
+        document.getElementById('edit-printer-nozzle').value = printer.nozzleSize;
+        document.getElementById('edit-printer-wattage').value = printer.wattage;
+        document.getElementById('edit-printer-volume').value = printer.buildVolume || '';
+        document.getElementById('edit-printer-hours').value = printer.totalHours || 0;
+        openModal('modal-edit-printer');
+      });
+    });
+
     document.querySelectorAll('.delete-printer-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         if (confirm('¿Eliminar esta impresora?')) {
@@ -376,6 +392,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const weightGrams = parseFloat(document.getElementById('calc-weight').value) || 0;
       const printHours = parseFloat(document.getElementById('calc-hours').value) || 0;
       const printerWattage = parseFloat(document.getElementById('calc-wattage').value) || 250;
+      const wearCostPerHour = parseFloat(document.getElementById('calc-wear').value) || 0.25;
+      const labourRatePerHour = parseFloat(document.getElementById('calc-labour').value) || 5.00;
       const margin = parseFloat(document.getElementById('calc-margin').value) || 40;
 
       const result = CostCalculator.calculate({
@@ -385,9 +403,9 @@ document.addEventListener('DOMContentLoaded', () => {
         printHours: printHours,
         printerWattage: printerWattage,
         electricityRateKwh: store.getSettings().electricityCostPerKwh,
-        wearCostPerHour: store.getSettings().wearCostPerHour,
-        labourTimeHours: 0.25,
-        labourRatePerHour: store.getSettings().labourCostPerHour,
+        wearCostPerHour: wearCostPerHour,
+        labourTimeHours: printHours,
+        labourRatePerHour: labourRatePerHour,
         profitMarginPercent: margin
       });
 
@@ -395,7 +413,9 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('calc-result-material').textContent = `${currency}${result.materialCost}`;
       document.getElementById('calc-result-elec').textContent = `${currency}${result.electricityCost}`;
       document.getElementById('calc-result-wear').textContent = `${currency}${result.wearCost}`;
+      document.getElementById('calc-result-labour').textContent = `${currency}${result.labourCost}`;
       document.getElementById('calc-result-total-cost').textContent = `${currency}${result.totalCost}`;
+      document.getElementById('calc-result-margin').textContent = `${currency}${result.profitAmount}`;
       document.getElementById('calc-result-suggested').textContent = `${currency}${result.suggestedPrice}`;
       document.getElementById('calc-results-card').style.display = 'block';
     });
@@ -501,6 +521,22 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       closeModal();
       renderSales();
+    });
+
+    document.getElementById('form-edit-printer')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('edit-printer-id').value;
+      store.updatePrinter(id, {
+        name: document.getElementById('edit-printer-name').value,
+        type: document.getElementById('edit-printer-type').value,
+        status: document.getElementById('edit-printer-status').value,
+        nozzleSize: parseFloat(document.getElementById('edit-printer-nozzle').value) || 0.4,
+        buildVolume: document.getElementById('edit-printer-volume').value,
+        wattage: parseInt(document.getElementById('edit-printer-wattage').value) || 200,
+        totalHours: parseFloat(document.getElementById('edit-printer-hours').value) || 0
+      });
+      closeModal();
+      renderPrinters();
     });
   }
 

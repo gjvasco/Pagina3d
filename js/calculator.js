@@ -13,7 +13,6 @@ class CostCalculator {
     wearCostPerHour = 0.25,
     labourTimeHours = 0.5,
     labourRatePerHour = 10.0,
-    failRiskMarginPercent = 10,
     profitMarginPercent = 40
   }) {
     // 1. Material Cost
@@ -30,23 +29,18 @@ class CostCalculator {
     // 4. Labour / Post-processing Cost
     const labourCost = labourTimeHours * labourRatePerHour;
 
-    // Direct Cost before risk
-    const directCost = materialCost + electricityCost + wearCost + labourCost;
+    // Total production cost
+    const totalCost = materialCost + electricityCost + wearCost + labourCost;
 
-    // Risk Margin (for failed prints buffer)
-    const riskCost = directCost * (failRiskMarginPercent / 100);
-    const totalCost = directCost + riskCost;
-
-    // 5. Profit Margin & Suggested Sale Price
+    // 5. Profit Margin: totalCost * (1 + margin/100)
     const profitAmount = totalCost * (profitMarginPercent / 100);
-    const suggestedPrice = totalCost + profitAmount;
+    const suggestedPrice = totalCost * (1 + profitMarginPercent / 100);
 
     return {
       materialCost: materialCost.toFixed(2),
       electricityCost: electricityCost.toFixed(2),
       wearCost: wearCost.toFixed(2),
       labourCost: labourCost.toFixed(2),
-      riskCost: riskCost.toFixed(2),
       totalCost: totalCost.toFixed(2),
       profitAmount: profitAmount.toFixed(2),
       suggestedPrice: suggestedPrice.toFixed(2),
