@@ -4,11 +4,16 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   // --- AUTHENTICATION & PIN LOCK ---
-  const DEFAULT_PIN = "1234"; // Puedes cambiar esta clave por defecto
+  const DEFAULT_PIN = "0795"; // PIN de seguridad por defecto
   const authScreen = document.getElementById('auth-screen');
   const authForm = document.getElementById('auth-form');
   const authPinInput = document.getElementById('auth-pin-input');
   const authErrorMsg = document.getElementById('auth-error-msg');
+
+  // Si existía el PIN antiguo de desarrollo ('1234') guardado, se remueve para forzar 0795
+  if (localStorage.getItem('app_family_pin') === '1234') {
+    localStorage.removeItem('app_family_pin');
+  }
 
   function checkAuth() {
     const isUnlocked = localStorage.getItem('app_unlocked');
@@ -22,17 +27,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (authForm) {
     authForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const enteredPin = authPinInput.value.trim();
+      const enteredPin = authPinInput ? authPinInput.value.trim() : '';
       const savedPin = localStorage.getItem('app_family_pin') || DEFAULT_PIN;
 
       if (enteredPin === savedPin || enteredPin === DEFAULT_PIN) {
         localStorage.setItem('app_unlocked', 'true');
-        authScreen.style.display = 'none';
-        authErrorMsg.style.display = 'none';
+        if (authScreen) authScreen.style.display = 'none';
+        if (authErrorMsg) authErrorMsg.style.display = 'none';
       } else {
-        authErrorMsg.style.display = 'block';
-        authPinInput.value = '';
-        authPinInput.focus();
+        if (authErrorMsg) authErrorMsg.style.display = 'block';
+        if (authPinInput) {
+          authPinInput.value = '';
+          authPinInput.focus();
+        }
       }
     });
   }
