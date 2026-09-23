@@ -456,16 +456,16 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Form Submissions
-    document.getElementById('form-supabase')?.addEventListener('submit', (e) => {
+"    // Form Submissions
+    document.getElementById('form-supabase')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const url = document.getElementById('supabase-url').value.trim();
       const key = document.getElementById('supabase-key').value.trim();
-      store.saveSupabaseCredentials(url, key);
-      alert('⚡ ¡Base de datos Supabase conectada con éxito!');
+      await store.saveSupabaseCredentials(url, key);
+      alert('⚡ ¡Base de datos Supabase conectada y datos sincronizados!');
       closeModal();
       location.reload();
-    });
+    });"
 
     document.getElementById('form-printer')?.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -590,7 +590,13 @@ document.addEventListener('DOMContentLoaded', () => {
     return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  // Initial Boot
+"  // Initial Boot
   setupModals();
-  navigateTo('dashboard');
+  if (store.useSupabase) {
+    store.syncFromSupabase().then(() => {
+      navigateTo('dashboard');
+    });
+  } else {
+    navigateTo('dashboard');
+  }"
 });

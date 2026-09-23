@@ -1,17 +1,21 @@
-{
-  "name": "3D Print Hub - Control de Impresión 3D",
+"{
+  "name": "3D Print Hub - Control 3D",
   "short_name": "3DPrintHub",
-  "description": "Aplicación de gestión y control de impresoras 3D, filamentos, trabajos, visor STL 3D y ventas.",
+  "id": "3d-print-hub-pwa",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#0a0d14",
-  "theme_color": "#00f2fe",
-  "orientation": "any",
+  "theme_color": "#0a0d14",
+  "description": "Gestión de impresoras 3D, filamentos, presupuestos, visor STL y control de ventas.",
+  "orientation": "portrait-primary",
+  "categories": ["utilities", "business", "productivity"],
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a0d14'/><path d='M50 15 L85 35 L85 65 L50 85 L15 65 L15 35 Z' fill='none' stroke='%2300f2fe' stroke-width='6'/><path d='M50 15 L50 85 M15 35 L85 65 M85 35 L15 65' stroke='%237928ca' stroke-width='4'/></svg>",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml"
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%230a0d14'/><path d='M256 70 L430 170 L430 340 L256 440 L82 340 L82 170 Z' fill='none' stroke='%2300f2fe' stroke-width='24'/><path d='M256 70 L256 440 M82 170 L430 340 M430 170 L82 340' stroke='%237928ca' stroke-width='16'/><circle cx='256' cy='255' r='40' fill='%2300f2fe'/></svg>",
+      "sizes": "512x512 192x192 144x144 96x96",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
-}
+}"

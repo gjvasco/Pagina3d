@@ -93,7 +93,7 @@ class Store {
     this.initSupabase();
   }
 
-  initSupabase() {
+"  initSupabase() {
     try {
       const cfgRaw = localStorage.getItem(SUPABASE_CONFIG_KEY);
       if (cfgRaw) {
@@ -110,9 +110,95 @@ class Store {
     }
   }
 
-  saveSupabaseCredentials(url, key) {
+  async syncFromSupabase() {
+    if (!this.useSupabase || !this.supabase) return false;
+
+    try {
+      const [resP, resS, resJ, resV] = await Promise.all([
+        this.supabase.from('printers').select('*'),
+        this.supabase.from('spools').select('*'),
+        this.supabase.from('jobs').select('*'),
+        this.supabase.from('sales').select('*')
+      ]);
+
+      let hasCloudData = false;
+
+      if (resP.data && resP.data.length > 0) {
+        this.data.printers = resP.data.map(p => ({
+          id: p.id,
+          name: p.name,
+          type: p.type,
+          status: p.status,
+          nozzleSize: parseFloat(p.nozzle_size) || 0.4,
+          buildVolume: p.build_volume || '',
+          wattage: parseInt(p.wattage) || 200,
+          totalHours: parseFloat(p.total_hours) || 0,
+          notes: p.notes || ''
+        }));
+        hasCloudData = true;
+      }
+
+      if (resS.data && resS.data.length > 0) {
+        this.data.spools = resS.data.map(s => ({
+          id: s.id,
+          name: s.name,
+          type: s.type,
+          brand: s.brand || '',
+          color: s.color || '#00f2fe',
+          initialWeight: parseInt(s.initial_weight) || 1000,
+          remainingWeight: parseInt(s.remaining_weight) || 0,
+          cost: parseFloat(s.cost) || 0
+        }));
+        hasCloudData = true;
+      }
+
+      if (resJ.data && resJ.data.length > 0) {
+        this.data.jobs = resJ.data.map(j => ({
+          id: j.id,
+          title: j.title,
+          printerId: j.printer_id,
+          spoolId: j.spool_id,
+          weightGrams: parseInt(j.weight_grams) || 0,
+          printTimeHours: parseFloat(j.print_time_hours) || 0,
+          status: j.status,
+          failureReason: j.failure_reason || '',
+          date: j.date || (j.created_at ? j.created_at.split('T')[0] : '')
+        }));
+        hasCloudData = true;
+      }
+
+      if (resV.data && resV.data.length > 0) {
+        this.data.sales = resV.data.map(v => ({
+          id: v.id,
+          jobTitle: v.job_title,
+          clientName: v.client_name,
+          salePrice: parseFloat(v.sale_price) || 0,
+          totalCost: parseFloat(v.total_cost) || 0,
+          profit: parseFloat(v.profit) || 0,
+          paymentStatus: v.payment_status,
+          date: v.date || (v.created_at ? v.created_at.split('T')[0] : '')
+        }));
+        hasCloudData = true;
+      }
+
+      if (hasCloudData) {
+        this.saveLocalStorageData();
+        console.log('☁️ Sincronizados datos reales desde Supabase');
+      }
+
+      return true;
+    } catch (e) {
+      console.error('Error al sincronizar desde Supabase:', e);
+      return false;
+    }
+  }
+
+  async saveSupabaseCredentials(url, key) {
     localStorage.setItem(SUPABASE_CONFIG_KEY, JSON.stringify({ url, key }));
     this.initSupabase();
+    if (this.useSupabase) {
+      await this.syncFromSupabase();
+    }
   }
 
   getSupabaseCredentials() {
