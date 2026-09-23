@@ -758,6 +758,29 @@ tr:hover td {
   .metric-value {
     font-size: 1.4rem;
   }
+
+  .modal-backdrop {
+    padding: 0.75rem 0.5rem 5rem 0.5rem;
+    align-items: flex-start;
+  }
+
+  .modal-content {
+    padding: 1.25rem 1rem;
+    border-radius: var(--radius-md);
+    max-height: calc(100vh - 5.5rem);
+    margin-top: 0.5rem;
+    margin-bottom: 4.5rem;
+  }
+
+  .modal-header {
+    top: -1.25rem;
+    margin-top: -1.25rem;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding-top: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }
 
 @media (max-width: 600px) {
@@ -786,29 +809,6 @@ tr:hover td {
   .mobile-nav-item svg {
     width: 20px;
     height: 20px;
-  }
-
-  .modal-backdrop {
-    padding: 0.75rem 0.5rem 5rem 0.5rem;
-    align-items: flex-start;
-  }
-
-  .modal-content {
-    padding: 1.25rem 1rem;
-    border-radius: var(--radius-md);
-    max-height: calc(100vh - 5.5rem);
-    margin-top: 0.5rem;
-    margin-bottom: 4.5rem;
-  }
-
-  .modal-header {
-    top: -1.25rem;
-    margin-top: -1.25rem;
-    margin-left: -1rem;
-    margin-right: -1rem;
-    padding-top: 1rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
   }
 
   #stl-viewer-container {
