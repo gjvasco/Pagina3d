@@ -499,6 +499,72 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    document.getElementById('btn-replace-cloud')?.addEventListener('click', async () => {
+      const url = document.getElementById('supabase-url').value.trim();
+      const key = document.getElementById('supabase-key').value.trim();
+      if (url && key) {
+        store.saveSupabaseCredentials(url, key);
+      }
+      if (!store.useSupabase) {
+        alert('Ingresa primero la URL y Key de Supabase.');
+        return;
+      }
+      if (!confirm('⚠️ ¿Estás seguro de reemplazar todos los datos de Supabase con los datos de este PC? Esto borrará registros antiguos que hayas eliminado.')) {
+        return;
+      }
+      const btn = document.getElementById('btn-replace-cloud');
+      btn.disabled = true;
+      btn.textContent = 'Reemplazando datos en la nube...';
+      const success = await store.replaceSupabaseWithLocalData();
+      btn.disabled = false;
+      btn.textContent = '🧹 Limpiar Nube y Reemplazar con Datos del PC';
+      if (success) {
+        alert('⚡ ¡Supabase ha sido limpiado y actualizado exclusivamente con los datos de este PC!');
+        closeModal();
+        location.reload();
+      } else {
+        alert('❌ Error al reemplazar los datos en Supabase.');
+      }
+    });
+
+    // Exportar datos a archivo JSON
+    document.getElementById('btn-export-json')?.addEventListener('click', () => {
+      const jsonStr = store.exportJSON();
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `3d_print_hub_backup_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    // Importar datos desde archivo JSON
+    const fileInput = document.getElementById('input-import-file');
+    document.getElementById('btn-import-json')?.addEventListener('click', () => {
+      if (fileInput) fileInput.click();
+    });
+
+    fileInput?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const content = event.target.result;
+        const success = store.importJSON(content);
+        if (success) {
+          alert('📥 ¡Datos importados con éxito!');
+          closeModal();
+          location.reload();
+        } else {
+          alert('❌ El archivo seleccionado no contiene un respaldo válido.');
+        }
+      };
+      reader.readAsText(file);
+    });
+
     document.getElementById('form-printer')?.addEventListener('submit', (e) => {
       e.preventDefault();
       store.addPrinter({

@@ -588,16 +588,16 @@
     </div>
   </div>
 
-  <!-- 5. Modal Conectar Supabase -->
+  <!-- 5. Modal Conectar Supabase y Respaldo -->
   <div class="modal-backdrop" id="modal-supabase">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>⚡ Conectar Supabase Cloud DB</h3>
+        <h3>⚡ Sincronización y Respaldo de Datos</h3>
         <button class="modal-close">&times;</button>
       </div>
       <form id="form-supabase">
         <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
-          Ingresa las credenciales de tu proyecto gratuito en <strong>Supabase.com</strong> para sincronizar impresoras, filamentos y ventas en tiempo real entre tu PC y tu Celular.
+          Ingresa las credenciales de tu proyecto en <strong>Supabase.com</strong> para sincronizar impresoras, filamentos y ventas en tiempo real entre tu PC y tu Celular.
         </p>
         <div class="form-group">
           <label class="form-label">Project URL (SUPABASE_URL)</label>
@@ -608,8 +608,21 @@
           <input type="text" class="form-control" id="supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." required>
         </div>
         <button type="submit" class="btn btn-primary" style="width:100%;">Conectar y Sincronizar Base de Datos</button>
-        <button type="button" id="btn-force-sync" class="btn btn-secondary" style="width:100%; margin-top:0.6rem; background:rgba(0, 242, 254, 0.1); border:1px solid rgba(0, 242, 254, 0.3); color:#00f2fe;">☁️ Subir Datos Locales a Supabase</button>
+        <button type="button" id="btn-force-sync" class="btn btn-secondary" style="width:100%; margin-top:0.6rem; background:rgba(0, 242, 254, 0.1); border:1px solid rgba(0, 242, 254, 0.3); color:#00f2fe;">☁️ Mezclar Datos con Supabase</button>
+        <button type="button" id="btn-replace-cloud" class="btn btn-secondary" style="width:100%; margin-top:0.6rem; background:rgba(255, 61, 113, 0.1); border:1px solid rgba(255, 61, 113, 0.3); color:#ff3d71;">🧹 Limpiar Nube y Reemplazar con Datos del PC</button>
       </form>
+      <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin:1.5rem 0;">
+      <div>
+        <h4 style="font-size:0.95rem; margin-bottom:0.5rem; color:#fff;">📁 Transferencia Manual de Datos (Exportar / Importar)</h4>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.75rem;">
+          Si prefieres transferir tus datos manualmente entre PC y Celular sin usar la nube, puedes descargar una copia de respaldo o cargar una previamente guardada.
+        </p>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <button type="button" id="btn-export-json" class="btn btn-secondary" style="flex:1; min-width:140px; font-size:0.85rem; justify-content:center;">📥 Exportar Copia (JSON)</button>
+          <button type="button" id="btn-import-json" class="btn btn-secondary" style="flex:1; min-width:140px; font-size:0.85rem; justify-content:center;">📤 Importar Copia (JSON)</button>
+        </div>
+        <input type="file" id="input-import-file" accept=".json" style="display:none;">
+      </div>
     </div>
   </div>
 

@@ -85,6 +85,11 @@ const DEMO_DATA = {
   ]
 };
 
+const DEFAULT_SUPABASE_CONFIG = {
+  url: '', // Opcional: define tu SUPABASE_URL aquí para que todos los dispositivos se conecten automáticamente
+  key: ''  // Opcional: define tu SUPABASE_ANON_KEY aquí para que todos los dispositivos se conecten automáticamente
+};
+
 class Store {
   constructor() {
     this.supabase = null;
@@ -95,14 +100,18 @@ class Store {
 
   initSupabase() {
     try {
+      let cfg = null;
       const cfgRaw = localStorage.getItem(SUPABASE_CONFIG_KEY);
       if (cfgRaw) {
-        const cfg = JSON.parse(cfgRaw);
-        if (cfg.url && cfg.key && window.supabase) {
-          this.supabase = window.supabase.createClient(cfg.url, cfg.key);
-          this.useSupabase = true;
-          console.log('⚡ Conectado a Supabase Cloud Database');
-        }
+        cfg = JSON.parse(cfgRaw);
+      } else if (DEFAULT_SUPABASE_CONFIG.url && DEFAULT_SUPABASE_CONFIG.key) {
+        cfg = DEFAULT_SUPABASE_CONFIG;
+      }
+
+      if (cfg && cfg.url && cfg.key && window.supabase) {
+        this.supabase = window.supabase.createClient(cfg.url, cfg.key);
+        this.useSupabase = true;
+        console.log('⚡ Conectado a Supabase Cloud Database');
       }
     } catch (e) {
       console.warn('Supabase no configurado, usando localStorage', e);
@@ -121,9 +130,14 @@ class Store {
         this.supabase.from('sales').select('*')
       ]);
 
-      let hasCloudData = false;
+      if (resP.error) console.error('Error Supabase impresoras:', resP.error.message || resP.error);
+      if (resS.error) console.error('Error Supabase filamentos:', resS.error.message || resS.error);
+      if (resJ.error) console.error('Error Supabase trabajos:', resJ.error.message || resJ.error);
+      if (resV.error) console.error('Error Supabase ventas:', resV.error.message || resV.error);
 
-      if (resP.data && resP.data.length > 0) {
+      let fetchedAny = false;
+
+      if (resP.data && !resP.error) {
         this.data.printers = resP.data.map(p => ({
           id: p.id,
           name: p.name,
@@ -135,10 +149,10 @@ class Store {
           totalHours: parseFloat(p.total_hours) || 0,
           notes: p.notes || ''
         }));
-        hasCloudData = true;
+        fetchedAny = true;
       }
 
-      if (resS.data && resS.data.length > 0) {
+      if (resS.data && !resS.error) {
         this.data.spools = resS.data.map(s => ({
           id: s.id,
           name: s.name,
@@ -149,10 +163,10 @@ class Store {
           remainingWeight: parseInt(s.remaining_weight) || 0,
           cost: parseFloat(s.cost) || 0
         }));
-        hasCloudData = true;
+        fetchedAny = true;
       }
 
-      if (resJ.data && resJ.data.length > 0) {
+      if (resJ.data && !resJ.error) {
         this.data.jobs = resJ.data.map(j => ({
           id: j.id,
           title: j.title,
@@ -164,10 +178,10 @@ class Store {
           failureReason: j.failure_reason || '',
           date: j.date || (j.created_at ? j.created_at.split('T')[0] : '')
         }));
-        hasCloudData = true;
+        fetchedAny = true;
       }
 
-      if (resV.data && resV.data.length > 0) {
+      if (resV.data && !resV.error) {
         this.data.sales = resV.data.map(v => ({
           id: v.id,
           jobTitle: v.job_title,
@@ -178,10 +192,10 @@ class Store {
           paymentStatus: v.payment_status,
           date: v.date || (v.created_at ? v.created_at.split('T')[0] : '')
         }));
-        hasCloudData = true;
+        fetchedAny = true;
       }
 
-      if (hasCloudData) {
+      if (fetchedAny) {
         this.saveLocalStorageData();
         console.log('☁️ Sincronizados datos reales desde Supabase');
       }
@@ -270,6 +284,28 @@ class Store {
     return true;
   }
 
+  async replaceSupabaseWithLocalData() {
+    if (!this.useSupabase || !this.supabase) return false;
+
+    try {
+      // Eliminar registros viejos/fantasma en Supabase
+      await Promise.all([
+        this.supabase.from('sales').delete().neq('id', '0'),
+        this.supabase.from('jobs').delete().neq('id', '0'),
+        this.supabase.from('spools').delete().neq('id', '0'),
+        this.supabase.from('printers').delete().neq('id', '0')
+      ]);
+
+      // Reemplazar con los datos limpios actuales
+      await this.pushAllToSupabase();
+      console.log('⚡ Supabase limpiado y actualizado con datos locales.');
+      return true;
+    } catch (e) {
+      console.error('Error al reemplazar datos en Supabase:', e);
+      return false;
+    }
+  }
+
   async saveSupabaseCredentials(url, key) {
     localStorage.setItem(SUPABASE_CONFIG_KEY, JSON.stringify({ url, key }));
     this.initSupabase();
@@ -280,9 +316,11 @@ class Store {
 
   getSupabaseCredentials() {
     try {
-      return JSON.parse(localStorage.getItem(SUPABASE_CONFIG_KEY) || '{}');
+      const cfgRaw = localStorage.getItem(SUPABASE_CONFIG_KEY);
+      if (cfgRaw) return JSON.parse(cfgRaw);
+      return DEFAULT_SUPABASE_CONFIG;
     } catch (e) {
-      return {};
+      return DEFAULT_SUPABASE_CONFIG;
     }
   }
 
@@ -489,6 +527,34 @@ class Store {
   }
 
   getSettings() { return this.data.settings; }
+
+  exportJSON() {
+    return JSON.stringify(this.data, null, 2);
+  }
+
+  importJSON(jsonString) {
+    try {
+      const parsed = JSON.parse(jsonString);
+      if (parsed && typeof parsed === 'object') {
+        this.data = {
+          settings: parsed.settings || DEMO_DATA.settings,
+          printers: Array.isArray(parsed.printers) ? parsed.printers : [],
+          spools: Array.isArray(parsed.spools) ? parsed.spools : [],
+          jobs: Array.isArray(parsed.jobs) ? parsed.jobs : [],
+          sales: Array.isArray(parsed.sales) ? parsed.sales : []
+        };
+        this.saveLocalStorageData();
+        if (this.useSupabase) {
+          this.pushAllToSupabase();
+        }
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error('Error al importar datos JSON:', e);
+      return false;
+    }
+  }
 }
 
 window.store = new Store();
