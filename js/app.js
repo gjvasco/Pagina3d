@@ -131,12 +131,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalJobs = jobs.length;
     const successRate = totalJobs ? Math.round((completedJobs / totalJobs) * 100) : 100;
     const totalSalesRev = sales.reduce((acc, s) => acc + (s.salePrice || 0), 0);
+    const totalProfit = sales.reduce((acc, s) => acc + (s.profit || 0), 0);
 
     // Update Metric Cards DOM
     document.getElementById('metric-hours').textContent = `${totalHours.toFixed(1)} h`;
     document.getElementById('metric-grams').textContent = `${totalGramsUsed} g`;
     document.getElementById('metric-success').textContent = `${successRate}%`;
     document.getElementById('metric-sales').textContent = `${currency}${totalSalesRev.toFixed(2)}`;
+    document.getElementById('metric-profit').textContent = `${currency}${totalProfit.toFixed(2)}`;
 
     // Render Recent Active Jobs List
     const recentList = document.getElementById('recent-jobs-list');

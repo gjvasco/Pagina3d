@@ -153,15 +153,6 @@
       <!-- VIEW 1: DASHBOARD -->
       <section id="view-dashboard" class="view-section active">
 
-        <!-- Supabase Cloud Banner -->
-        <div class="card" style="background:linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(121, 40, 202, 0.15)); border:1px solid var(--accent-cyan); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem; padding:1.25rem 1.5rem;">
-          <div>
-            <h4 style="margin-bottom:0.25rem; font-size:1.05rem; color:var(--accent-cyan);">⚡ Conectar Base de Datos en la Nube (Supabase)</h4>
-            <p style="font-size:0.85rem; color:var(--text-muted);">Sincroniza tus impresoras, filamentos y ventas en tiempo real entre tu PC y Celular.</p>
-          </div>
-          <button class="btn btn-primary" id="dashboard-btn-supabase">Conectar Supabase</button>
-        </div>
-
         <!-- Metric Cards -->
         <div class="metrics-grid">
           <div class="card metric-card">
@@ -201,6 +192,16 @@
             <div class="metric-data">
               <h3 id="metric-sales">$0.00</h3>
               <p>Ingresos por Ventas</p>
+            </div>
+          </div>
+
+          <div class="card metric-card">
+            <div class="metric-icon" style="background:linear-gradient(135deg, rgba(0, 230, 118, 0.2), rgba(0, 230, 118, 0.05)); color:#00e676;">
+              <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+            </div>
+            <div class="metric-data">
+              <h3 id="metric-profit">$0.00</h3>
+              <p>Beneficios Netos</p>
             </div>
           </div>
         </div>
