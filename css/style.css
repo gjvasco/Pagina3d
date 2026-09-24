@@ -876,38 +876,42 @@ tr:hover td {
     height: 260px;
   }
 
-  /* Tablas adaptables sin cortar la pantalla con barra deslizante visible */
+  /* Tablas adaptables sin cortar la pantalla con barra deslizante visible siempre */
   .table-container {
     width: 100%;
     max-width: 100%;
-    overflow-x: auto;
+    overflow-x: scroll;
     -webkit-overflow-scrolling: touch;
     border-radius: var(--radius-md);
-    padding-bottom: 6px; /* Espacio para la barra de desplazamiento */
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-cyan) rgba(255, 255, 255, 0.05);
   }
 
   .table-container::-webkit-scrollbar {
-    height: 5px;
+    height: 8px !important;
+    display: block !important;
   }
 
   .table-container::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-radius: 6px !important;
   }
 
   .table-container::-webkit-scrollbar-thumb {
-    background: var(--accent-cyan);
-    border-radius: 4px;
+    background: var(--accent-cyan) !important;
+    border-radius: 6px !important;
   }
 
-  table {
+  .table-container table {
     width: 100%;
-    min-width: 460px;
+    min-width: 540px !important;
   }
 
-  th, td {
-    padding: 0.55rem 0.45rem;
-    font-size: 0.78rem;
+  .table-container th, 
+  .table-container td {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.8rem;
     white-space: nowrap;
   }
 
