@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const store = window.store;
   let stlViewerInstance = null;
   let statusChart = null;
+  let monthlyChart = null;
 
   // Cache UI Elements
   const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-item');
@@ -124,13 +125,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // --- SUPABASE STATUS PILL ---
+  function updateSupabaseStatusPill() {
+    const dot = document.getElementById('supabase-status-dot');
+    const text = document.getElementById('supabase-status-text');
+    const pill = document.getElementById('supabase-status-pill');
+    if (!dot || !text || !pill) return;
+
+    if (store.useSupabase && store.supabase) {
+      dot.style.background = '#00e676';
+      dot.style.boxShadow = '0 0 8px #00e676';
+      text.textContent = '⚡ Supabase Cloud';
+      pill.style.border = '1px solid rgba(0, 230, 118, 0.4)';
+      pill.style.background = 'rgba(0, 230, 118, 0.1)';
+      pill.style.color = '#00e676';
+    } else {
+      dot.style.background = '#8a99ad';
+      dot.style.boxShadow = 'none';
+      text.textContent = '📁 Local Storage';
+      pill.style.border = '1px solid rgba(255,255,255,0.15)';
+      pill.style.background = 'rgba(255,255,255,0.05)';
+      pill.style.color = 'var(--text-muted)';
+    }
+  }
+
   // --- 1. RENDER DASHBOARD ---
   function renderDashboard() {
+    updateSupabaseStatusPill();
     const jobs = store.getJobs();
     const spools = store.getSpools();
     const printers = store.getPrinters();
     const sales = store.getSales();
     const currency = store.getSettings().currencySymbol || '$';
+
+    // Low Stock Alert Detection
+    const lowStockSpools = spools.filter(s => {
+      const pct = (s.remainingWeight / s.initialWeight);
+      return s.remainingWeight <= 150 || pct <= 0.15;
+    });
+
+    const lowStockBanner = document.getElementById('dashboard-low-stock-alert');
+    const lowStockText = document.getElementById('low-stock-alert-text');
+    if (lowStockBanner && lowStockText) {
+      if (lowStockSpools.length > 0) {
+        lowStockBanner.style.display = 'block';
+        const names = lowStockSpools.map(s => `"${s.name}" (${s.remainingWeight}g)`).join(', ');
+        lowStockText.textContent = `Tienes ${lowStockSpools.length} carrete(s) por agotar: ${names}.`;
+      } else {
+        lowStockBanner.style.display = 'none';
+      }
+    }
 
     // Metrics Calculation
     const totalHours = printers.reduce((acc, p) => acc + (p.totalHours || 0), 0);
@@ -153,20 +197,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (recentList) {
       recentList.innerHTML = jobs.slice(0, 4).map(job => {
         const printer = store.getPrinter(job.printerId);
-        const spool = store.getSpool(job.spoolId);
         return `
           <tr>
-            <td><strong>${escapeHtml(job.title)}</strong></td>
+            <td>
+              <strong>${escapeHtml(job.title)}</strong>
+              <div style="font-size:0.7rem; color:var(--text-muted);">${job.date || '-'}</div>
+            </td>
             <td>${printer ? escapeHtml(printer.name) : 'N/A'}</td>
             <td><span class="badge badge-${job.status}">${job.status}</span></td>
-            <td>${job.printTimeHours} h (${job.weightGrams}g)</td>
+            <td>${job.printTimeHours}h / ${job.weightGrams}g</td>
           </tr>
         `;
       }).join('') || '<tr><td colspan="4" class="text-muted">No hay trabajos registrados.</td></tr>';
     }
 
-    // Render Chart.js Donut for Print Job Status
+    // Render Charts
     initStatusChart(jobs);
+    initMonthlyRevenueChart(sales);
   }
 
   function initStatusChart(jobs) {
@@ -195,6 +242,78 @@ document.addEventListener('DOMContentLoaded', () => {
         maintainAspectRatio: false,
         plugins: {
           legend: { position: 'bottom', labels: { color: '#8a99ad', font: { family: 'Outfit' } } }
+        }
+      }
+    });
+  }
+
+  // --- MONTHLY REVENUE CHART ---
+  function initMonthlyRevenueChart(sales) {
+    const ctx = document.getElementById('chart-monthly-revenue');
+    if (!ctx) return;
+
+    const monthsMap = {};
+    sales.forEach(s => {
+      const dateStr = s.date || new Date().toISOString().split('T')[0];
+      const monthKey = dateStr.substring(0, 7);
+      if (!monthsMap[monthKey]) {
+        monthsMap[monthKey] = { revenue: 0, profit: 0 };
+      }
+      monthsMap[monthKey].revenue += (s.salePrice || 0);
+      monthsMap[monthKey].profit += (s.profit || 0);
+    });
+
+    const sortedMonths = Object.keys(monthsMap).sort();
+    if (sortedMonths.length === 0) {
+      const currentMonth = new Date().toISOString().substring(0, 7);
+      sortedMonths.push(currentMonth);
+      monthsMap[currentMonth] = { revenue: 0, profit: 0 };
+    }
+
+    const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const labels = sortedMonths.map(m => {
+      const [y, mm] = m.split('-');
+      const monthIdx = parseInt(mm, 10) - 1;
+      return `${monthNames[monthIdx] || mm} ${y}`;
+    });
+
+    const revData = sortedMonths.map(m => monthsMap[m].revenue);
+    const profitData = sortedMonths.map(m => monthsMap[m].profit);
+
+    if (monthlyChart) monthlyChart.destroy();
+
+    monthlyChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Ingresos Totales ($)',
+            data: revData,
+            backgroundColor: 'rgba(0, 242, 254, 0.6)',
+            borderColor: '#00f2fe',
+            borderWidth: 1,
+            borderRadius: 6
+          },
+          {
+            label: 'Beneficio Neto ($)',
+            data: profitData,
+            backgroundColor: 'rgba(0, 230, 118, 0.6)',
+            borderColor: '#00e676',
+            borderWidth: 1,
+            borderRadius: 6
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#8a99ad', font: { family: 'Outfit' } } }
+        },
+        scales: {
+          x: { ticks: { color: '#8a99ad' }, grid: { display: false } },
+          y: { ticks: { color: '#8a99ad' }, grid: { color: 'rgba(255,255,255,0.05)' } }
         }
       }
     });
@@ -266,16 +385,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     container.innerHTML = spools.map(s => {
       const pct = Math.round((s.remainingWeight / s.initialWeight) * 100);
-      const isLow = pct <= 20;
+      const isLow = s.remainingWeight <= 150 || pct <= 15;
 
       return `
-        <div class="card spool-card">
+        <div class="card spool-card" style="${isLow ? 'border:1px solid rgba(255, 61, 113, 0.5); box-shadow:0 0 15px rgba(255,61,113,0.15);' : ''}">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
             <div style="display:flex; align-items:center; gap:0.6rem;">
               <span style="width:16px; height:16px; border-radius:50%; background:${s.color}; border:1px solid #fff; display:inline-block;"></span>
               <h3 style="font-size:1.05rem;">${escapeHtml(s.name)}</h3>
             </div>
-            <span class="badge ${isLow ? 'badge-failed' : 'badge-printing'}">${s.type}</span>
+            <div style="display:flex; gap:0.3rem;">
+              ${isLow ? '<span class="badge badge-failed" style="font-size:0.7rem;">⚠️ STOCK BAJO</span>' : ''}
+              <span class="badge ${isLow ? 'badge-failed' : 'badge-printing'}">${s.type}</span>
+            </div>
           </div>
 
           <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text-muted);">
@@ -285,6 +407,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <div class="spool-gauge">
             <div class="spool-fill" style="width:${pct}%; background:${isLow ? 'var(--accent-red)' : s.color || 'var(--accent-cyan)'}"></div>
+          </div>
+
+          <!-- Temperaturas -->
+          <div style="display:flex; gap:0.75rem; font-size:0.78rem; color:var(--text-muted); margin-bottom:0.6rem; flex-wrap:wrap; background:rgba(255,255,255,0.03); padding:0.4rem 0.6rem; border-radius:8px;">
+            <span>🌡️ Boquilla: <strong style="color:#fff;">${escapeHtml(s.nozzleTemp || 'Standard')}</strong></span>
+            <span>🛏️ Cama: <strong style="color:#fff;">${escapeHtml(s.bedTemp || 'Standard')}</strong></span>
           </div>
 
           <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">
@@ -312,6 +440,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('edit-spool-remaining').value = spool.remainingWeight;
         document.getElementById('edit-spool-weight').value = spool.initialWeight;
         document.getElementById('edit-spool-cost').value = spool.cost;
+        document.getElementById('edit-spool-nozzle-temp').value = spool.nozzleTemp || '';
+        document.getElementById('edit-spool-bed-temp').value = spool.bedTemp || '';
         openModal('modal-edit-spool');
       });
     });
@@ -361,6 +491,8 @@ document.addEventListener('DOMContentLoaded', () => {
           </td>
           <td>${j.weightGrams} g</td>
           <td>${j.printTimeHours} h</td>
+          <td>${j.labourHours || 0} h</td>
+          <td style="font-size:0.8rem; color:var(--text-muted);">${j.date || '-'}</td>
           <td><span class="badge badge-${j.status}">${j.status}</span></td>
           <td style="white-space:nowrap;">
             <button class="btn btn-secondary btn-icon-only edit-job-btn" data-id="${j.id}" title="Editar">✏️</button>
@@ -368,7 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </td>
         </tr>
       `;
-    }).join('') || '<tr><td colspan="7" class="text-muted">No hay trabajos que coincidan.</td></tr>';
+    }).join('') || '<tr><td colspan="9" class="text-muted">No hay trabajos que coincidan.</td></tr>';
 
     document.querySelectorAll('.edit-job-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -382,6 +514,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('edit-job-title').value = job.title;
         document.getElementById('edit-job-grams').value = job.weightGrams;
         document.getElementById('edit-job-hours').value = job.printTimeHours;
+        document.getElementById('edit-job-labour-hours').value = job.labourHours || 0;
+        document.getElementById('edit-job-date').value = job.date || '';
         document.getElementById('edit-job-status').value = job.status;
         document.getElementById('edit-job-failure-reason').value = job.failureReason || '';
         openModal('modal-edit-job');
@@ -768,7 +902,9 @@ document.addEventListener('DOMContentLoaded', () => {
         color: document.getElementById('spool-color').value,
         initialWeight: parseInt(document.getElementById('spool-weight').value) || 1000,
         remainingWeight: parseInt(document.getElementById('spool-weight').value) || 1000,
-        cost: parseFloat(document.getElementById('spool-cost').value) || 20
+        cost: parseFloat(document.getElementById('spool-cost').value) || 20,
+        nozzleTemp: document.getElementById('spool-nozzle-temp')?.value.trim() || '',
+        bedTemp: document.getElementById('spool-bed-temp')?.value.trim() || ''
       });
       closeModal();
       renderSpools();
@@ -782,6 +918,8 @@ document.addEventListener('DOMContentLoaded', () => {
         spoolId: document.getElementById('job-spool-id').value,
         weightGrams: parseInt(document.getElementById('job-grams').value) || 0,
         printTimeHours: parseFloat(document.getElementById('job-hours').value) || 0,
+        labourHours: parseFloat(document.getElementById('job-labour-hours')?.value) || 0,
+        date: document.getElementById('job-date')?.value || new Date().toISOString().split('T')[0],
         status: document.getElementById('job-status').value,
         failureReason: document.getElementById('job-failure-reason').value
       });
@@ -829,7 +967,9 @@ document.addEventListener('DOMContentLoaded', () => {
         color: document.getElementById('edit-spool-color').value,
         initialWeight: parseInt(document.getElementById('edit-spool-weight').value) || 1000,
         remainingWeight: parseInt(document.getElementById('edit-spool-remaining').value) || 0,
-        cost: parseFloat(document.getElementById('edit-spool-cost').value) || 0
+        cost: parseFloat(document.getElementById('edit-spool-cost').value) || 0,
+        nozzleTemp: document.getElementById('edit-spool-nozzle-temp')?.value.trim() || '',
+        bedTemp: document.getElementById('edit-spool-bed-temp')?.value.trim() || ''
       });
       closeModal();
       renderSpools();
@@ -845,6 +985,8 @@ document.addEventListener('DOMContentLoaded', () => {
         spoolId: document.getElementById('edit-job-spool-id').value,
         weightGrams: parseInt(document.getElementById('edit-job-grams').value) || 0,
         printTimeHours: parseFloat(document.getElementById('edit-job-hours').value) || 0,
+        labourHours: parseFloat(document.getElementById('edit-job-labour-hours')?.value) || 0,
+        date: document.getElementById('edit-job-date')?.value || new Date().toISOString().split('T')[0],
         status: document.getElementById('edit-job-status').value,
         failureReason: document.getElementById('edit-job-failure-reason').value
       });

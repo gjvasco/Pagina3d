@@ -95,7 +95,9 @@ class Store {
           color: s.color || '#00f2fe',
           initialWeight: parseInt(s.initial_weight) || 1000,
           remainingWeight: parseInt(s.remaining_weight) || 0,
-          cost: parseFloat(s.cost) || 0
+          cost: parseFloat(s.cost) || 0,
+          nozzleTemp: s.nozzle_temp || '',
+          bedTemp: s.bed_temp || ''
         }));
         fetchedAny = true;
       }
@@ -108,6 +110,7 @@ class Store {
           spoolId: j.spool_id,
           weightGrams: parseInt(j.weight_grams) || 0,
           printTimeHours: parseFloat(j.print_time_hours) || 0,
+          labourHours: parseFloat(j.labour_hours) || 0,
           status: j.status,
           failureReason: j.failure_reason || '',
           date: j.date || (j.created_at ? j.created_at.split('T')[0] : '')
@@ -169,7 +172,9 @@ class Store {
           color: s.color,
           initial_weight: s.initialWeight,
           remaining_weight: s.remainingWeight,
-          cost: s.cost
+          cost: s.cost,
+          nozzle_temp: s.nozzleTemp || '',
+          bed_temp: s.bedTemp || ''
         }));
         await this.supabase.from('spools').upsert(sRows, { onConflict: 'id' });
       }
@@ -182,6 +187,7 @@ class Store {
           spool_id: j.spoolId,
           weight_grams: j.weightGrams,
           print_time_hours: j.printTimeHours,
+          labour_hours: j.labourHours || 0,
           status: j.status,
           failure_reason: j.failureReason || '',
           date: j.date || new Date().toISOString().split('T')[0]
@@ -354,7 +360,9 @@ class Store {
           color: spool.color,
           initial_weight: spool.initialWeight,
           remaining_weight: spool.remainingWeight,
-          cost: spool.cost
+          cost: spool.cost,
+          nozzle_temp: spool.nozzleTemp || '',
+          bed_temp: spool.bedTemp || ''
         }]);
       } catch (e) { console.error('Error insertando spool en Supabase:', e); }
     }
@@ -382,7 +390,9 @@ class Store {
         color: spool.color,
         initial_weight: spool.initialWeight,
         remaining_weight: spool.remainingWeight,
-        cost: spool.cost
+        cost: spool.cost,
+        nozzle_temp: spool.nozzleTemp || '',
+        bed_temp: spool.bedTemp || ''
       }).eq('id', id).then();
     }
   }
@@ -404,6 +414,7 @@ class Store {
   async addJob(job) {
     job.id = 'j_' + Date.now();
     job.date = job.date || new Date().toISOString().split('T')[0];
+    job.labourHours = parseFloat(job.labourHours) || 0;
     this.data.jobs.unshift(job);
 
     if (job.status === 'completado' && job.spoolId && job.weightGrams) {
@@ -428,8 +439,10 @@ class Store {
           spool_id: job.spoolId,
           weight_grams: job.weightGrams,
           print_time_hours: job.printTimeHours,
+          labour_hours: job.labourHours || 0,
           status: job.status,
-          failure_reason: job.failureReason || ''
+          failure_reason: job.failureReason || '',
+          date: job.date
         }]);
       } catch (e) { console.error('Error insertando job en Supabase:', e); }
     }
@@ -456,8 +469,10 @@ class Store {
         spool_id: job.spoolId,
         weight_grams: job.weightGrams,
         print_time_hours: job.printTimeHours,
+        labour_hours: job.labourHours || 0,
         status: job.status,
-        failure_reason: job.failureReason || ''
+        failure_reason: job.failureReason || '',
+        date: job.date
       }).eq('id', id).then();
     }
   }

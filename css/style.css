@@ -1012,3 +1012,10 @@ tr:hover td {
     font-size: 0.62rem;
   }
 }
+
+/* Supabase Status Pill Hover */
+#supabase-status-pill:hover {
+  filter: brightness(1.2);
+  transform: translateY(-1px);
+}
+

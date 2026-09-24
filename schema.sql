@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS jobs (
   spool_id TEXT REFERENCES spools(id) ON DELETE SET NULL,
   weight_grams INTEGER DEFAULT 0,
   print_time_hours NUMERIC DEFAULT 0,
+  labour_hours NUMERIC DEFAULT 0,
   status TEXT NOT NULL DEFAULT 'completado',
   failure_reason TEXT,
   date DATE DEFAULT CURRENT_DATE,
@@ -70,3 +71,9 @@ CREATE POLICY "Acceso total anonimo para printers" ON printers FOR ALL USING (tr
 CREATE POLICY "Acceso total anonimo para spools" ON spools FOR ALL USING (true);
 CREATE POLICY "Acceso total anonimo para jobs" ON jobs FOR ALL USING (true);
 CREATE POLICY "Acceso total anonimo para sales" ON sales FOR ALL USING (true);
+
+-- Migraciones para proyectos existentes en Supabase:
+ALTER TABLE spools ADD COLUMN IF NOT EXISTS nozzle_temp TEXT;
+ALTER TABLE spools ADD COLUMN IF NOT EXISTS bed_temp TEXT;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS labour_hours NUMERIC DEFAULT 0;
+
