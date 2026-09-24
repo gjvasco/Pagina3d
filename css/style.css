@@ -696,6 +696,12 @@ tr:hover td {
 
 /* Responsive Media Queries */
 @media (max-width: 900px) {
+  #app {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
   .sidebar {
     display: none;
   }
@@ -706,19 +712,22 @@ tr:hover td {
 
   .main-content {
     margin-left: 0;
-    padding: 1rem 0.85rem;
-    padding-bottom: calc(var(--bottom-nav-height) + 1.25rem);
+    width: 100%;
+    max-width: 100vw;
+    padding: 1rem 0.75rem;
+    padding-bottom: calc(var(--bottom-nav-height) + 1.5rem);
+    overflow-x: hidden;
   }
 
   .top-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.85rem;
-    margin-bottom: 1.25rem;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
   }
 
   .top-header .header-title h2 {
-    font-size: 1.3rem;
+    font-size: 1.25rem;
   }
 
   .top-header .header-title p {
@@ -733,39 +742,32 @@ tr:hover td {
 
   .header-actions .btn {
     flex: 1;
-    font-size: 0.85rem;
-    padding: 0.65rem 0.5rem;
+    font-size: 0.8rem;
+    padding: 0.6rem 0.4rem;
     justify-content: center;
   }
 
   .grid-2col {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
   .grid-cards {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
-  .metrics-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-  }
-
-  .metric-card {
+  .card {
     padding: 1rem;
   }
 
-  .metric-data h3 {
-    font-size: 1.25rem;
-  }
-
   .modal-backdrop {
-    padding: 0.75rem 0.5rem 5rem 0.5rem;
+    padding: 0.5rem 0.5rem 5rem 0.5rem;
     align-items: flex-start;
   }
 
   .modal-content {
-    padding: 1.25rem 1rem;
+    padding: 1rem;
     border-radius: var(--radius-md);
     max-height: calc(100vh - 5.5rem);
     margin-top: 0.5rem;
@@ -773,21 +775,25 @@ tr:hover td {
   }
 
   .modal-header {
-    top: -1.25rem;
-    margin-top: -1.25rem;
+    top: -1rem;
+    margin-top: -1rem;
     margin-left: -1rem;
     margin-right: -1rem;
-    padding-top: 1rem;
+    padding-top: 0.85rem;
     padding-left: 1rem;
     padding-right: 1rem;
   }
 }
 
 @media (max-width: 600px) {
+  body {
+    overflow-x: hidden;
+  }
+
   .section-header-mobile {
     flex-direction: column;
     align-items: stretch !important;
-    gap: 0.75rem;
+    gap: 0.6rem;
   }
 
   .section-header-mobile .btn {
@@ -795,90 +801,132 @@ tr:hover td {
     justify-content: center;
   }
 
+  /* Tarjetas de Métricas en Vertical */
   .metrics-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.6rem;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
   }
 
   .metric-card {
-    padding: 0.75rem 0.6rem;
-    gap: 0.6rem;
-    flex-direction: column;
-    align-items: flex-start;
+    padding: 0.65rem 0.5rem;
+    gap: 0.5rem;
+    flex-direction: row;
+    align-items: center;
+    min-width: 0; /* Previene desbordamiento de flex items */
   }
 
   .metric-icon {
-    width: 38px;
-    height: 38px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
     border-radius: var(--radius-sm);
   }
 
   .metric-icon svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .metric-data {
+    min-width: 0;
+    overflow: hidden;
   }
 
   .metric-data h3 {
-    font-size: 1.1rem;
-    line-height: 1.2;
+    font-size: 1.05rem;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .metric-data p {
-    font-size: 0.75rem;
+    font-size: 0.68rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .form-row {
     grid-template-columns: 1fr;
-    gap: 0.75rem;
+    gap: 0.65rem;
   }
 
+  /* Barra de Navegación Móvil Inferior */
   .mobile-nav {
-    padding: 0 0.15rem;
-    height: 65px;
+    padding: 0 0.1rem;
+    height: 60px;
   }
 
   .mobile-nav-item {
-    padding: 0.35rem 0.1rem;
-    font-size: 0.6rem;
+    padding: 0.25rem 0.05rem;
+    font-size: 0.58rem;
     min-width: 0;
     flex: 1;
     text-align: center;
   }
 
   .mobile-nav-item svg {
-    width: 19px;
-    height: 19px;
+    width: 18px;
+    height: 18px;
   }
 
   #stl-viewer-container {
-    height: 280px;
+    height: 260px;
   }
 
+  /* Tablas adaptables sin cortar la pantalla */
   .table-container {
     width: 100%;
+    max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     border-radius: var(--radius-md);
   }
 
   table {
-    min-width: 500px;
+    width: 100%;
+    min-width: 480px;
   }
 
   th, td {
-    padding: 0.6rem 0.45rem;
-    font-size: 0.8rem;
-    white-space: nowrap;
+    padding: 0.5rem 0.4rem;
+    font-size: 0.78rem;
+  }
+
+  th {
+    font-size: 0.7rem;
   }
 }
 
-@media (max-width: 380px) {
+@media (max-width: 400px) {
   .metrics-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.4rem;
   }
 
   .metric-card {
-    flex-direction: row;
-    align-items: center;
+    padding: 0.55rem 0.4rem;
+    gap: 0.4rem;
+  }
+
+  .metric-icon {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+  }
+
+  .metric-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .metric-data h3 {
+    font-size: 0.95rem;
+  }
+
+  .metric-data p {
+    font-size: 0.62rem;
   }
 }
