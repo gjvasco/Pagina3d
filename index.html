@@ -133,6 +133,10 @@
         <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
         Ventas
       </a>
+      <a class="mobile-nav-item" data-view="calculator">
+        <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="18"></line></svg>
+        Calculadora
+      </a>
       <a class="mobile-nav-item" id="mobile-btn-supabase" style="color:var(--accent-cyan);">
         <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
         Cloud DB
@@ -242,7 +246,7 @@
 
       <!-- VIEW 2: PRINTERS -->
       <section id="view-printers" class="view-section">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <div class="section-header-mobile" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
           <h3>Gestión de Impresoras</h3>
           <button class="btn btn-primary" id="btn-add-printer">+ Agregar Impresora</button>
         </div>
@@ -253,7 +257,7 @@
 
       <!-- VIEW 3: SPOOLS (FILAMENTS) -->
       <section id="view-spools" class="view-section">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <div class="section-header-mobile" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
           <h3>Inventario de Carretes de Filamento</h3>
           <button class="btn btn-primary" id="btn-add-spool">+ Nuevo Carrete</button>
         </div>
@@ -264,7 +268,7 @@
 
       <!-- VIEW 4: JOBS -->
       <section id="view-jobs" class="view-section">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <div class="section-header-mobile" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
           <h3>Registro de Trabajos de Impresión</h3>
           <button class="btn btn-primary" onclick="document.getElementById('btn-add-job').click()">+ Registrar Impresión</button>
         </div>
@@ -290,7 +294,7 @@
 
       <!-- VIEW 5: 3D STL VIEWER -->
       <section id="view-3d-viewer" class="view-section">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <div class="section-header-mobile" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
           <h3>Visor 3D Interactivo de Archivos STL</h3>
           <label class="btn btn-primary">
             📁 Cargar Archivo .STL
@@ -318,7 +322,7 @@
 
       <!-- VIEW 6: SALES & ORDERS -->
       <section id="view-sales" class="view-section">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <div class="section-header-mobile" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
           <h3>Ventas y Control de Pedidos</h3>
           <button class="btn btn-primary" id="btn-add-sale">+ Nueva Venta</button>
         </div>
