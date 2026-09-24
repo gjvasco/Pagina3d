@@ -369,6 +369,24 @@ class Store {
     }
   }
 
+  updateSpool(id, updates) {
+    const spool = this.data.spools.find(s => s.id === id);
+    if (!spool) return;
+    Object.assign(spool, updates);
+    this.saveLocalStorageData();
+    if (this.useSupabase) {
+      this.supabase.from('spools').update({
+        name: spool.name,
+        type: spool.type,
+        brand: spool.brand,
+        color: spool.color,
+        initial_weight: spool.initialWeight,
+        remaining_weight: spool.remainingWeight,
+        cost: spool.cost
+      }).eq('id', id).then();
+    }
+  }
+
   consumeFilament(spoolId, grams) {
     const spool = this.getSpool(spoolId);
     if (spool) {
@@ -426,6 +444,24 @@ class Store {
     }
   }
 
+  updateJob(id, updates) {
+    const job = this.data.jobs.find(j => j.id === id);
+    if (!job) return;
+    Object.assign(job, updates);
+    this.saveLocalStorageData();
+    if (this.useSupabase) {
+      this.supabase.from('jobs').update({
+        title: job.title,
+        printer_id: job.printerId,
+        spool_id: job.spoolId,
+        weight_grams: job.weightGrams,
+        print_time_hours: job.printTimeHours,
+        status: job.status,
+        failure_reason: job.failureReason || ''
+      }).eq('id', id).then();
+    }
+  }
+
   // --- VENTAS ---
   getSales() { return this.data.sales; }
 
@@ -460,7 +496,31 @@ class Store {
     }
   }
 
+  updateSale(id, updates) {
+    const sale = this.data.sales.find(s => s.id === id);
+    if (!sale) return;
+    Object.assign(sale, updates);
+    sale.profit = parseFloat((sale.salePrice - sale.totalCost).toFixed(2));
+    this.saveLocalStorageData();
+    if (this.useSupabase) {
+      this.supabase.from('sales').update({
+        job_title: sale.jobTitle,
+        client_name: sale.clientName,
+        sale_price: sale.salePrice,
+        total_cost: sale.totalCost,
+        profit: sale.profit,
+        payment_status: sale.paymentStatus,
+        date: sale.date
+      }).eq('id', id).then();
+    }
+  }
+
   getSettings() { return this.data.settings; }
+
+  saveSettings(newSettings) {
+    this.data.settings = Object.assign(this.data.settings, newSettings);
+    this.saveLocalStorageData();
+  }
 
   exportJSON() {
     return JSON.stringify(this.data, null, 2);

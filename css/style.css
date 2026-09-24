@@ -517,14 +517,32 @@ body {
 
 /* Table Styling */
 .table-container {
-  overflow-x: auto;
+  width: 100%;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-cyan) rgba(255, 255, 255, 0.08);
 }
 
-table {
+.table-container::-webkit-scrollbar {
+  height: 7px;
+  display: block;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: var(--accent-cyan);
+  border-radius: 4px;
+}
+
+.table-container table {
   width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  font-size: 0.9rem;
+  min-width: 540px;
 }
 
 th {
@@ -544,6 +562,50 @@ td {
 
 tr:hover td {
   background: rgba(255, 255, 255, 0.02);
+}
+
+/* Filter Bar */
+.filter-bar {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-bar .filter-input {
+  flex: 2;
+  min-width: 180px;
+}
+
+.filter-bar .filter-select {
+  flex: 1;
+  min-width: 140px;
+}
+
+/* Toast Notification */
+#app-toast {
+  position: fixed;
+  bottom: 5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(0, 230, 118, 0.15);
+  border: 1px solid rgba(0, 230, 118, 0.4);
+  color: #00e676;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  backdrop-filter: blur(12px);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  white-space: nowrap;
+}
+
+#app-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 /* Modal Windows */

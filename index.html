@@ -16,7 +16,7 @@
   <meta name="apple-mobile-web-app-title" content="3DPrintHub">
 
   <!-- CSS Design System -->
-  <link rel="stylesheet" href="css/style.css?v=12">
+  <link rel="stylesheet" href="css/style.css?v=13">
 
   <!-- External Libraries (Chart.js, Three.js & Supabase CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -103,6 +103,12 @@
           </a>
         </li>
         <li>
+          <a class="nav-link" data-view="settings">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            Configuración
+          </a>
+        </li>
+        <li>
           <a class="nav-link" id="nav-btn-supabase" style="color:var(--accent-cyan); font-weight:600;">
             <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
             ⚡ Supabase Cloud
@@ -136,6 +142,10 @@
       <a class="mobile-nav-item" data-view="calculator">
         <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="18"></line></svg>
         Calculadora
+      </a>
+      <a class="mobile-nav-item" data-view="settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Config
       </a>
       <a class="mobile-nav-item" id="mobile-btn-supabase" style="color:var(--accent-cyan);">
         <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
@@ -271,9 +281,23 @@
 
       <!-- VIEW 4: JOBS -->
       <section id="view-jobs" class="view-section">
-        <div class="section-header-mobile" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <div class="section-header-mobile" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
           <h3>Registro de Trabajos de Impresión</h3>
           <button class="btn btn-primary" onclick="document.getElementById('btn-add-job').click()">+ Registrar Impresión</button>
+        </div>
+        <!-- Filtros de Trabajos -->
+        <div class="filter-bar">
+          <input type="text" class="form-control filter-input" id="jobs-search" placeholder="🔍 Buscar proyecto o pieza...">
+          <select class="form-control filter-select" id="jobs-filter-status">
+            <option value="">Todos los estados</option>
+            <option value="completado">Completado</option>
+            <option value="imprimiendo">Imprimiendo</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="fallido">Fallido</option>
+          </select>
+          <select class="form-control filter-select" id="jobs-filter-printer">
+            <option value="">Todas las impresoras</option>
+          </select>
         </div>
         <div class="card table-container">
           <table>
@@ -325,9 +349,18 @@
 
       <!-- VIEW 6: SALES & ORDERS -->
       <section id="view-sales" class="view-section">
-        <div class="section-header-mobile" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <div class="section-header-mobile" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
           <h3>Ventas y Control de Pedidos</h3>
           <button class="btn btn-primary" id="btn-add-sale">+ Nueva Venta</button>
+        </div>
+        <!-- Filtros de Ventas -->
+        <div class="filter-bar">
+          <input type="text" class="form-control filter-input" id="sales-search" placeholder="🔍 Buscar producto o cliente...">
+          <select class="form-control filter-select" id="sales-filter-status">
+            <option value="">Todos los pagos</option>
+            <option value="pagado">Pagado</option>
+            <option value="pendiente">Pendiente</option>
+          </select>
         </div>
         <div class="card table-container">
           <table>
@@ -339,6 +372,7 @@
                 <th>Coste Real</th>
                 <th>Beneficio Neto</th>
                 <th>Estado Pago</th>
+                <th>Fecha</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -357,6 +391,10 @@
             <div class="form-group">
               <label class="form-label">Seleccionar Filamento / Material</label>
               <select class="form-control" id="calc-spool-select"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nombre del Proyecto (para guardar)</label>
+              <input type="text" class="form-control" id="calc-project-name" placeholder="Ej: Soporte para pared">
             </div>
             <div class="form-row">
               <div class="form-group">
@@ -380,13 +418,17 @@
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label">Hora de Trabajo ($/hora)</label>
-                <input type="number" step="0.01" class="form-control" id="calc-labour" value="5.00">
+                <label class="form-label">Horas Mano de Obra (Post-proceso)</label>
+                <input type="number" step="0.1" class="form-control" id="calc-labour-hours" value="0.5">
               </div>
               <div class="form-group">
-                <label class="form-label">Margen de Ganancia (%)</label>
-                <input type="number" class="form-control" id="calc-margin" value="40">
+                <label class="form-label">Costo Mano de Obra ($/hora)</label>
+                <input type="number" step="0.01" class="form-control" id="calc-labour" value="5.00">
               </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Margen de Ganancia (%)</label>
+              <input type="number" class="form-control" id="calc-margin" value="40">
             </div>
             <button type="submit" class="btn btn-primary" style="width:100%;">🧮 Calcular Precio Sugerido</button>
           </form>
@@ -403,6 +445,72 @@
               <div style="display:flex; justify-content:space-between;"><span>Margen de Ganancia:</span> <strong id="calc-result-margin" style="color:var(--accent-purple);">$0.00</strong></div>
               <div style="display:flex; justify-content:space-between; font-size:1.25rem; margin-top:0.5rem;"><span>Precio Sugerido Venta:</span> <strong id="calc-result-suggested" style="color:var(--accent-green);">$0.00</strong></div>
             </div>
+            <hr style="border-color:var(--border-color); margin:1rem 0;">
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.75rem;">¿Listo para vender? Guarda este cálculo directamente:</p>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+              <button type="button" id="btn-calc-save-job" class="btn btn-secondary" style="flex:1; min-width:140px; font-size:0.85rem; justify-content:center;">💾 Guardar como Trabajo</button>
+              <button type="button" id="btn-calc-save-sale" class="btn btn-primary" style="flex:1; min-width:140px; font-size:0.85rem; justify-content:center;">🛒 Crear Venta</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 8: SETTINGS -->
+      <section id="view-settings" class="view-section">
+        <h3 style="margin-bottom:1.5rem;">⚙️ Configuración de la Aplicación</h3>
+        <div class="grid-2col">
+          <!-- Tarifa y Costes -->
+          <div class="card">
+            <h4 style="margin-bottom:1.25rem; color:var(--accent-cyan); font-size:1rem;">💡 Tarifas y Costes por Defecto</h4>
+            <form id="form-settings">
+              <div class="form-group">
+                <label class="form-label">Símbolo de Moneda</label>
+                <input type="text" class="form-control" id="cfg-currency" placeholder="$" maxlength="3">
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Coste Electricidad ($/kWh)</label>
+                  <input type="number" step="0.001" class="form-control" id="cfg-electricity" placeholder="0.18">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Mano de Obra ($/hora)</label>
+                  <input type="number" step="0.1" class="form-control" id="cfg-labour" placeholder="5.00">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Desgaste Impresora ($/hora)</label>
+                  <input type="number" step="0.01" class="form-control" id="cfg-wear" placeholder="0.25">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Margen de Ganancia por Defecto (%)</label>
+                  <input type="number" class="form-control" id="cfg-margin" placeholder="40">
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary" style="width:100%;">💾 Guardar Configuración</button>
+            </form>
+          </div>
+          <!-- Seguridad -->
+          <div class="card">
+            <h4 style="margin-bottom:1.25rem; color:var(--accent-purple); font-size:1rem;">🔐 Seguridad — Cambio de PIN</h4>
+            <form id="form-change-pin">
+              <div class="form-group">
+                <label class="form-label">PIN Actual</label>
+                <input type="password" class="form-control" id="cfg-pin-current" placeholder="••••" maxlength="10">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Nuevo PIN</label>
+                <input type="password" class="form-control" id="cfg-pin-new" placeholder="••••" maxlength="10">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Confirmar Nuevo PIN</label>
+                <input type="password" class="form-control" id="cfg-pin-confirm" placeholder="••••" maxlength="10">
+              </div>
+              <div id="cfg-pin-msg" style="font-size:0.82rem; margin-bottom:0.75rem; display:none;"></div>
+              <button type="submit" class="btn btn-secondary" style="width:100%;">🔒 Cambiar PIN</button>
+            </form>
+            <hr style="border-color:var(--border-color); margin:1.25rem 0;">
+            <button id="btn-cfg-logout" class="btn" style="width:100%; background:rgba(255,61,113,0.1); border:1px solid rgba(255,61,113,0.3); color:#ff3d71; justify-content:center;">🚪 Cerrar Sesión (Bloquear App)</button>
           </div>
         </div>
       </section>
@@ -690,6 +798,156 @@
     </div>
   </div>
 
+  <!-- 7. Modal Editar Trabajo -->
+  <div class="modal-backdrop" id="modal-edit-job">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Editar Trabajo de Impresión</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <form id="form-edit-job">
+        <input type="hidden" id="edit-job-id">
+        <div class="form-group">
+          <label class="form-label">Título del Proyecto / Pieza</label>
+          <input type="text" class="form-control" id="edit-job-title" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Impresora</label>
+            <select class="form-control" id="edit-job-printer-id"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Carrete Filamento</label>
+            <select class="form-control" id="edit-job-spool-id"></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Peso Consumido (g)</label>
+            <input type="number" class="form-control" id="edit-job-grams">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Duración (Horas)</label>
+            <input type="number" step="0.1" class="form-control" id="edit-job-hours">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado de la Impresión</label>
+          <select class="form-control" id="edit-job-status">
+            <option value="completado">Completado</option>
+            <option value="imprimiendo">Imprimiendo</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="fallido">Fallido</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Motivo de Fallo (Si aplica)</label>
+          <input type="text" class="form-control" id="edit-job-failure-reason">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">Guardar Cambios</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 8. Modal Editar Venta -->
+  <div class="modal-backdrop" id="modal-edit-sale">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Editar Venta / Pedido</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <form id="form-edit-sale">
+        <input type="hidden" id="edit-sale-id">
+        <div class="form-group">
+          <label class="form-label">Nombre del Producto / Trabajo</label>
+          <input type="text" class="form-control" id="edit-sale-title" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nombre del Cliente</label>
+          <input type="text" class="form-control" id="edit-sale-client" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Precio Cobrado ($)</label>
+            <input type="number" step="0.1" class="form-control" id="edit-sale-price" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Coste Real ($)</label>
+            <input type="number" step="0.1" class="form-control" id="edit-sale-cost" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Estado del Pago</label>
+            <select class="form-control" id="edit-sale-payment-status">
+              <option value="pagado">Pagado</option>
+              <option value="pendiente">Pendiente de Pago</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha</label>
+            <input type="date" class="form-control" id="edit-sale-date">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">Guardar Cambios</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 9. Modal Editar Carrete -->
+  <div class="modal-backdrop" id="modal-edit-spool">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Editar Carrete de Filamento</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <form id="form-edit-spool">
+        <input type="hidden" id="edit-spool-id">
+        <div class="form-group">
+          <label class="form-label">Nombre del Carrete</label>
+          <input type="text" class="form-control" id="edit-spool-name" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Material</label>
+            <select class="form-control" id="edit-spool-type">
+              <option value="PLA">PLA</option>
+              <option value="PETG">PETG</option>
+              <option value="ABS">ABS</option>
+              <option value="TPU">TPU</option>
+              <option value="RESIN">Resina</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Marca</label>
+            <input type="text" class="form-control" id="edit-spool-brand">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Color Visual</label>
+            <input type="color" class="form-control" id="edit-spool-color">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Peso Restante (g)</label>
+            <input type="number" class="form-control" id="edit-spool-remaining">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Peso Inicial (g)</label>
+            <input type="number" class="form-control" id="edit-spool-weight">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Coste del Carrete ($)</label>
+            <input type="number" step="0.1" class="form-control" id="edit-spool-cost">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">Guardar Cambios</button>
+      </form>
+    </div>
+  </div>
+
   <!-- Service Worker Registration -->
   <script>
     if ('serviceWorker' in navigator) {
@@ -700,9 +958,9 @@
   </script>
 
   <!-- App Scripts -->
-  <script src="js/store.js?v=12"></script>
-  <script src="js/calculator.js?v=12"></script>
-  <script src="js/viewer3d.js?v=12"></script>
-  <script src="js/app.js?v=12"></script>
+  <script src="js/store.js?v=13"></script>
+  <script src="js/calculator.js?v=13"></script>
+  <script src="js/viewer3d.js?v=13"></script>
+  <script src="js/app.js?v=13"></script>
 </body>
 </html>

@@ -110,6 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         break;
       case 'jobs':
         renderJobs();
+        populateJobsFilterPrinters();
         break;
       case 'sales':
         renderSales();
@@ -279,11 +280,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text-muted);">
             <span>${s.remainingWeight}g / ${s.initialWeight}g</span>
-            <strong style="color:${isLow ? 'var(--accent-red)' : 'var(--accent-cyan)'};">${pct}%</strong>
+            <strong style="color:${isLow ? 'var(--accent-red)' : 'var(--accent-cyan)'}">${pct}%</strong>
           </div>
 
           <div class="spool-gauge">
-            <div class="spool-fill" style="width:${pct}%; background:${isLow ? 'var(--accent-red)' : s.color || 'var(--accent-cyan)'};"></div>
+            <div class="spool-fill" style="width:${pct}%; background:${isLow ? 'var(--accent-red)' : s.color || 'var(--accent-cyan)'}"></div>
           </div>
 
           <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">
@@ -292,11 +293,28 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
 
           <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+            <button class="btn btn-secondary btn-icon-only edit-spool-btn" data-id="${s.id}" title="Editar">✏️</button>
             <button class="btn btn-danger btn-icon-only delete-spool-btn" data-id="${s.id}">🗑️</button>
           </div>
         </div>
       `;
     }).join('') || '<p class="text-muted">No hay carretes de filamento en inventario.</p>';
+
+    document.querySelectorAll('.edit-spool-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const spool = store.getSpool(btn.getAttribute('data-id'));
+        if (!spool) return;
+        document.getElementById('edit-spool-id').value = spool.id;
+        document.getElementById('edit-spool-name').value = spool.name;
+        document.getElementById('edit-spool-type').value = spool.type;
+        document.getElementById('edit-spool-brand').value = spool.brand || '';
+        document.getElementById('edit-spool-color').value = spool.color || '#00f2fe';
+        document.getElementById('edit-spool-remaining').value = spool.remainingWeight;
+        document.getElementById('edit-spool-weight').value = spool.initialWeight;
+        document.getElementById('edit-spool-cost').value = spool.cost;
+        openModal('modal-edit-spool');
+      });
+    });
 
     document.querySelectorAll('.delete-spool-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -309,11 +327,24 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- 4. RENDER JOBS ---
-  function renderJobs() {
+  function renderJobs(filterSearch = '', filterStatus = '', filterPrinterId = '') {
     const tbody = document.getElementById('jobs-table-body');
     if (!tbody) return;
 
-    const jobs = store.getJobs();
+    let jobs = store.getJobs();
+
+    // Apply filters
+    if (filterSearch) {
+      const s = filterSearch.toLowerCase();
+      jobs = jobs.filter(j => j.title.toLowerCase().includes(s));
+    }
+    if (filterStatus) {
+      jobs = jobs.filter(j => j.status === filterStatus);
+    }
+    if (filterPrinterId) {
+      jobs = jobs.filter(j => j.printerId === filterPrinterId);
+    }
+
     tbody.innerHTML = jobs.map(j => {
       const printer = store.getPrinter(j.printerId);
       const spool = store.getSpool(j.spoolId);
@@ -331,30 +362,85 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>${j.weightGrams} g</td>
           <td>${j.printTimeHours} h</td>
           <td><span class="badge badge-${j.status}">${j.status}</span></td>
-          <td>
+          <td style="white-space:nowrap;">
+            <button class="btn btn-secondary btn-icon-only edit-job-btn" data-id="${j.id}" title="Editar">✏️</button>
             <button class="btn btn-danger btn-icon-only delete-job-btn" data-id="${j.id}">🗑️</button>
           </td>
         </tr>
       `;
-    }).join('') || '<tr><td colspan="7" class="text-muted">No hay trabajos registrados.</td></tr>';
+    }).join('') || '<tr><td colspan="7" class="text-muted">No hay trabajos que coincidan.</td></tr>';
+
+    document.querySelectorAll('.edit-job-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const job = store.getJobs().find(j => j.id === btn.getAttribute('data-id'));
+        if (!job) return;
+        const pSel = document.getElementById('edit-job-printer-id');
+        const sSel = document.getElementById('edit-job-spool-id');
+        pSel.innerHTML = store.getPrinters().map(p => `<option value="${p.id}" ${p.id === job.printerId ? 'selected' : ''}>${p.name}</option>`).join('');
+        sSel.innerHTML = store.getSpools().map(s => `<option value="${s.id}" ${s.id === job.spoolId ? 'selected' : ''}>${s.name} (${s.remainingWeight}g)</option>`).join('');
+        document.getElementById('edit-job-id').value = job.id;
+        document.getElementById('edit-job-title').value = job.title;
+        document.getElementById('edit-job-grams').value = job.weightGrams;
+        document.getElementById('edit-job-hours').value = job.printTimeHours;
+        document.getElementById('edit-job-status').value = job.status;
+        document.getElementById('edit-job-failure-reason').value = job.failureReason || '';
+        openModal('modal-edit-job');
+      });
+    });
 
     document.querySelectorAll('.delete-job-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         if (confirm('¿Eliminar este registro de trabajo?')) {
           store.deleteJob(btn.getAttribute('data-id'));
-          renderJobs();
+          renderJobs(getJobFilters());
         }
       });
     });
   }
 
+  function getJobFilters() {
+    return [
+      (document.getElementById('jobs-search') || {}).value || '',
+      (document.getElementById('jobs-filter-status') || {}).value || '',
+      (document.getElementById('jobs-filter-printer') || {}).value || ''
+    ];
+  }
+
+  function populateJobsFilterPrinters() {
+    const sel = document.getElementById('jobs-filter-printer');
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">Todas las impresoras</option>' +
+      store.getPrinters().map(p => `<option value="${p.id}" ${p.id === current ? 'selected' : ''}>${p.name}</option>`).join('');
+  }
+
+  // Bind filter events for jobs (once)
+  let jobFiltersInitialized = false;
+  function initJobFilters() {
+    if (jobFiltersInitialized) return;
+    jobFiltersInitialized = true;
+    const applyFilters = () => renderJobs(...getJobFilters());
+    document.getElementById('jobs-search')?.addEventListener('input', applyFilters);
+    document.getElementById('jobs-filter-status')?.addEventListener('change', applyFilters);
+    document.getElementById('jobs-filter-printer')?.addEventListener('change', applyFilters);
+  }
+
   // --- 5. RENDER SALES ---
-  function renderSales() {
+  function renderSales(filterSearch = '', filterStatus = '') {
     const tbody = document.getElementById('sales-table-body');
     if (!tbody) return;
 
-    const sales = store.getSales();
+    let sales = store.getSales();
     const currency = store.getSettings().currencySymbol || '$';
+
+    // Apply filters
+    if (filterSearch) {
+      const s = filterSearch.toLowerCase();
+      sales = sales.filter(v => v.jobTitle.toLowerCase().includes(s) || v.clientName.toLowerCase().includes(s));
+    }
+    if (filterStatus) {
+      sales = sales.filter(v => v.paymentStatus === filterStatus);
+    }
 
     tbody.innerHTML = sales.map(s => `
       <tr>
@@ -364,20 +450,54 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>${currency}${s.totalCost.toFixed(2)}</td>
         <td><strong style="color:var(--accent-green);">${currency}${s.profit.toFixed(2)}</strong></td>
         <td><span class="badge ${s.paymentStatus === 'pagado' ? 'badge-completed' : 'badge-maintenance'}">${s.paymentStatus}</span></td>
-        <td>
+        <td style="font-size:0.8rem; color:var(--text-muted);">${s.date || '-'}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-secondary btn-icon-only edit-sale-btn" data-id="${s.id}" title="Editar">✏️</button>
           <button class="btn btn-danger btn-icon-only delete-sale-btn" data-id="${s.id}">🗑️</button>
         </td>
       </tr>
-    `).join('') || '<tr><td colspan="7" class="text-muted">No hay ventas o pedidos registrados.</td></tr>';
+    `).join('') || '<tr><td colspan="8" class="text-muted">No hay ventas que coincidan.</td></tr>';
+
+    document.querySelectorAll('.edit-sale-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const sale = store.getSales().find(s => s.id === btn.getAttribute('data-id'));
+        if (!sale) return;
+        document.getElementById('edit-sale-id').value = sale.id;
+        document.getElementById('edit-sale-title').value = sale.jobTitle;
+        document.getElementById('edit-sale-client').value = sale.clientName;
+        document.getElementById('edit-sale-price').value = sale.salePrice;
+        document.getElementById('edit-sale-cost').value = sale.totalCost;
+        document.getElementById('edit-sale-payment-status').value = sale.paymentStatus;
+        document.getElementById('edit-sale-date').value = sale.date || '';
+        openModal('modal-edit-sale');
+      });
+    });
 
     document.querySelectorAll('.delete-sale-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         if (confirm('¿Eliminar este registro de venta?')) {
           store.deleteSale(btn.getAttribute('data-id'));
-          renderSales();
+          renderSales(...getSaleFilters());
         }
       });
     });
+  }
+
+  function getSaleFilters() {
+    return [
+      (document.getElementById('sales-search') || {}).value || '',
+      (document.getElementById('sales-filter-status') || {}).value || ''
+    ];
+  }
+
+  // Bind filter events for sales (once)
+  let saleFiltersInitialized = false;
+  function initSaleFilters() {
+    if (saleFiltersInitialized) return;
+    saleFiltersInitialized = true;
+    const applyFilters = () => renderSales(...getSaleFilters());
+    document.getElementById('sales-search')?.addEventListener('input', applyFilters);
+    document.getElementById('sales-filter-status')?.addEventListener('change', applyFilters);
   }
 
   // --- 6. RENDER CALCULATOR ---
@@ -389,6 +509,29 @@ document.addEventListener('DOMContentLoaded', () => {
         <option value="${s.id}">${s.name} (${s.type} - $${s.cost})</option>
       `).join('');
     }
+    // Pre-fill defaults from settings
+    const settings = store.getSettings();
+    const wearEl = document.getElementById('calc-wear');
+    const labourEl = document.getElementById('calc-labour');
+    const marginEl = document.getElementById('calc-margin');
+    if (wearEl) wearEl.value = settings.wearCostPerHour || 0.25;
+    if (labourEl) labourEl.value = settings.labourCostPerHour || 5.0;
+    if (marginEl) marginEl.value = settings.defaultMargin || 40;
+  }
+
+  // --- 7. RENDER SETTINGS ---
+  function renderSettings() {
+    const settings = store.getSettings();
+    const cfgCurrency = document.getElementById('cfg-currency');
+    const cfgElec = document.getElementById('cfg-electricity');
+    const cfgLabour = document.getElementById('cfg-labour');
+    const cfgWear = document.getElementById('cfg-wear');
+    const cfgMargin = document.getElementById('cfg-margin');
+    if (cfgCurrency) cfgCurrency.value = settings.currencySymbol || '$';
+    if (cfgElec) cfgElec.value = settings.electricityCostPerKwh || 0.18;
+    if (cfgLabour) cfgLabour.value = settings.labourCostPerHour || 5.0;
+    if (cfgWear) cfgWear.value = settings.wearCostPerHour || 0.25;
+    if (cfgMargin) cfgMargin.value = settings.defaultMargin || 40;
   }
 
   // Form Submit Handler for Calculator
@@ -402,6 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const printHours = parseFloat(document.getElementById('calc-hours').value) || 0;
       const printerWattage = parseFloat(document.getElementById('calc-wattage').value) || 250;
       const wearCostPerHour = parseFloat(document.getElementById('calc-wear').value) || 0.25;
+      const labourHours = parseFloat(document.getElementById('calc-labour-hours').value) || 0.5;
       const labourRatePerHour = parseFloat(document.getElementById('calc-labour').value) || 5.00;
       const margin = parseFloat(document.getElementById('calc-margin').value) || 40;
 
@@ -413,7 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
         printerWattage: printerWattage,
         electricityRateKwh: store.getSettings().electricityCostPerKwh,
         wearCostPerHour: wearCostPerHour,
-        labourTimeHours: printHours,
+        labourTimeHours: labourHours,
         labourRatePerHour: labourRatePerHour,
         profitMarginPercent: margin
       });
@@ -427,8 +571,34 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('calc-result-margin').textContent = `${currency}${result.profitAmount}`;
       document.getElementById('calc-result-suggested').textContent = `${currency}${result.suggestedPrice}`;
       document.getElementById('calc-results-card').style.display = 'block';
+
+      // Store last result for save buttons
+      calcForm._lastResult = { result, weightGrams, printHours, spoolId };
     });
   }
+
+  // Save from Calculator buttons
+  document.getElementById('btn-calc-save-job')?.addEventListener('click', () => {
+    if (!calcForm._lastResult) return;
+    const { result, weightGrams, printHours, spoolId } = calcForm._lastResult;
+    const projectName = document.getElementById('calc-project-name')?.value.trim() || 'Pieza Calculada';
+    populateJobModalDropdowns();
+    document.getElementById('job-title').value = projectName;
+    document.getElementById('job-grams').value = weightGrams;
+    document.getElementById('job-hours').value = printHours;
+    document.getElementById('job-spool-id').value = spoolId || '';
+    openModal('modal-job');
+  });
+
+  document.getElementById('btn-calc-save-sale')?.addEventListener('click', () => {
+    if (!calcForm._lastResult) return;
+    const { result } = calcForm._lastResult;
+    const projectName = document.getElementById('calc-project-name')?.value.trim() || 'Pieza Calculada';
+    document.getElementById('sale-title').value = projectName;
+    document.getElementById('sale-cost').value = result.totalCost;
+    document.getElementById('sale-price').value = result.suggestedPrice;
+    openModal('modal-sale');
+  });
 
   // --- 7. MODAL DIALOGS LOGIC ---
   function setupModals() {
@@ -647,6 +817,111 @@ document.addEventListener('DOMContentLoaded', () => {
       closeModal();
       renderPrinters();
     });
+
+    // Edit Spool
+    document.getElementById('form-edit-spool')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('edit-spool-id').value;
+      store.updateSpool(id, {
+        name: document.getElementById('edit-spool-name').value,
+        type: document.getElementById('edit-spool-type').value,
+        brand: document.getElementById('edit-spool-brand').value,
+        color: document.getElementById('edit-spool-color').value,
+        initialWeight: parseInt(document.getElementById('edit-spool-weight').value) || 1000,
+        remainingWeight: parseInt(document.getElementById('edit-spool-remaining').value) || 0,
+        cost: parseFloat(document.getElementById('edit-spool-cost').value) || 0
+      });
+      closeModal();
+      renderSpools();
+    });
+
+    // Edit Job
+    document.getElementById('form-edit-job')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('edit-job-id').value;
+      store.updateJob(id, {
+        title: document.getElementById('edit-job-title').value,
+        printerId: document.getElementById('edit-job-printer-id').value,
+        spoolId: document.getElementById('edit-job-spool-id').value,
+        weightGrams: parseInt(document.getElementById('edit-job-grams').value) || 0,
+        printTimeHours: parseFloat(document.getElementById('edit-job-hours').value) || 0,
+        status: document.getElementById('edit-job-status').value,
+        failureReason: document.getElementById('edit-job-failure-reason').value
+      });
+      closeModal();
+      renderJobs(...getJobFilters());
+    });
+
+    // Edit Sale
+    document.getElementById('form-edit-sale')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('edit-sale-id').value;
+      store.updateSale(id, {
+        jobTitle: document.getElementById('edit-sale-title').value,
+        clientName: document.getElementById('edit-sale-client').value,
+        salePrice: parseFloat(document.getElementById('edit-sale-price').value) || 0,
+        totalCost: parseFloat(document.getElementById('edit-sale-cost').value) || 0,
+        paymentStatus: document.getElementById('edit-sale-payment-status').value,
+        date: document.getElementById('edit-sale-date').value
+      });
+      closeModal();
+      renderSales(...getSaleFilters());
+    });
+
+    // Settings Form
+    document.getElementById('form-settings')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      store.saveSettings({
+        currencySymbol: document.getElementById('cfg-currency').value.trim() || '$',
+        electricityCostPerKwh: parseFloat(document.getElementById('cfg-electricity').value) || 0.18,
+        labourCostPerHour: parseFloat(document.getElementById('cfg-labour').value) || 5.0,
+        wearCostPerHour: parseFloat(document.getElementById('cfg-wear').value) || 0.25,
+        defaultMargin: parseFloat(document.getElementById('cfg-margin').value) || 40
+      });
+      showToast('✅ Configuración guardada correctamente.');
+    });
+
+    // PIN Change Form
+    document.getElementById('form-change-pin')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const currentPin = document.getElementById('cfg-pin-current').value;
+      const newPin = document.getElementById('cfg-pin-new').value;
+      const confirmPin = document.getElementById('cfg-pin-confirm').value;
+      const savedPin = localStorage.getItem('app_family_pin') || DEFAULT_PIN;
+      const msgEl = document.getElementById('cfg-pin-msg');
+
+      if (currentPin !== savedPin) {
+        msgEl.textContent = '❌ El PIN actual no es correcto.';
+        msgEl.style.color = 'var(--accent-red)';
+        msgEl.style.display = 'block';
+        return;
+      }
+      if (newPin.length < 4) {
+        msgEl.textContent = '❌ El nuevo PIN debe tener al menos 4 dígitos.';
+        msgEl.style.color = 'var(--accent-red)';
+        msgEl.style.display = 'block';
+        return;
+      }
+      if (newPin !== confirmPin) {
+        msgEl.textContent = '❌ Los PINs no coinciden.';
+        msgEl.style.color = 'var(--accent-red)';
+        msgEl.style.display = 'block';
+        return;
+      }
+      localStorage.setItem('app_family_pin', newPin);
+      msgEl.textContent = '✅ PIN cambiado correctamente.';
+      msgEl.style.color = 'var(--accent-green)';
+      msgEl.style.display = 'block';
+      document.getElementById('cfg-pin-current').value = '';
+      document.getElementById('cfg-pin-new').value = '';
+      document.getElementById('cfg-pin-confirm').value = '';
+    });
+
+    // Logout / Lock
+    document.getElementById('btn-cfg-logout')?.addEventListener('click', () => {
+      localStorage.removeItem('app_unlocked');
+      location.reload();
+    });
   }
 
   function populateJobModalDropdowns() {
@@ -667,6 +942,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function closeModal() {
     document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('active'));
+  }
+
+  // --- Toast Notification ---
+  function showToast(message, duration = 3000) {
+    let toast = document.getElementById('app-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'app-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.classList.add('visible');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => toast.classList.remove('visible'), duration);
   }
 
   // --- 8. STL FILE UPLOADER HANDLER ---
@@ -699,6 +988,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initial Boot
   setupModals();
+  initJobFilters();
+  initSaleFilters();
   if (store.useSupabase) {
     store.syncFromSupabase()
       .catch(err => console.warn('Supabase sync warning on boot:', err))
