@@ -210,28 +210,40 @@ body {
   left: 0;
   right: 0;
   height: var(--bottom-nav-height);
-  background: rgba(14, 19, 31, 0.92);
+  background: rgba(14, 19, 31, 0.94);
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
   border-top: 1px solid var(--border-color);
   z-index: 999;
-  justify-content: space-around;
+  justify-content: flex-start;
   align-items: center;
-  padding: 0 0.5rem;
+  padding: 0 0.25rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.mobile-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .mobile-nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: center;
+  gap: 0.2rem;
   color: var(--text-muted);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   text-decoration: none;
-  padding: 0.5rem;
+  padding: 0.35rem 0.2rem;
   border-radius: var(--radius-sm);
   transition: all 0.2s ease;
   cursor: pointer;
+  flex: 1 0 auto;
+  min-width: 52px;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .mobile-nav-item svg {
@@ -355,6 +367,9 @@ body {
   padding: 1.5rem;
   box-shadow: var(--shadow-card);
   transition: all 0.3s ease;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .card:hover {
@@ -814,6 +829,11 @@ tr:hover td {
     gap: 1rem;
   }
 
+  .grid-2col > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .grid-cards {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -821,6 +841,8 @@ tr:hover td {
 
   .card {
     padding: 1rem;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .modal-backdrop {
@@ -917,15 +939,15 @@ tr:hover td {
 
   /* Barra de Navegación Móvil Inferior */
   .mobile-nav {
-    padding: 0 0.1rem;
+    padding: 0 0.2rem;
     height: 60px;
   }
 
   .mobile-nav-item {
-    padding: 0.25rem 0.05rem;
-    font-size: 0.58rem;
-    min-width: 0;
-    flex: 1;
+    padding: 0.25rem 0.1rem;
+    font-size: 0.62rem;
+    min-width: 52px;
+    flex: 1 0 auto;
     text-align: center;
   }
 

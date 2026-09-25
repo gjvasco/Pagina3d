@@ -291,53 +291,61 @@ class Store {
   getPrinter(id) { return this.data.printers.find(p => p.id === id); }
   
   async addPrinter(printer) {
-    printer.id = 'p_' + Date.now();
+    printer.id = printer.id || ('p_' + Date.now());
     this.data.printers.push(printer);
     this.saveLocalStorageData();
 
     if (this.useSupabase) {
       try {
-        await this.supabase.from('printers').insert([{
+        const { error } = await this.supabase.from('printers').insert([{
           id: printer.id,
           name: printer.name,
           type: printer.type,
           status: printer.status,
           nozzle_size: printer.nozzleSize,
-          build_volume: printer.buildVolume,
+          build_volume: printer.buildVolume || '',
           wattage: printer.wattage,
-          total_hours: printer.totalHours,
+          total_hours: printer.totalHours || 0,
           notes: printer.notes || ''
         }]);
-      } catch (e) { console.error('Error insertando en Supabase:', e); }
+        if (error) console.error('Error insertando impresora en Supabase:', error.message || error);
+      } catch (e) { console.error('Error insertando impresora en Supabase:', e); }
     }
     return printer;
   }
 
-  deletePrinter(id) {
+  async deletePrinter(id) {
     this.data.printers = this.data.printers.filter(p => p.id !== id);
     this.saveLocalStorageData();
 
     if (this.useSupabase) {
-      this.supabase.from('printers').delete().eq('id', id).then();
+      try {
+        const { error } = await this.supabase.from('printers').delete().eq('id', id);
+        if (error) console.error('Error eliminando impresora en Supabase:', error.message || error);
+      } catch (e) { console.error('Error eliminando impresora en Supabase:', e); }
     }
   }
 
-  updatePrinter(id, updates) {
+  async updatePrinter(id, updates) {
     const printer = this.getPrinter(id);
     if (!printer) return;
     Object.assign(printer, updates);
     this.saveLocalStorageData();
 
     if (this.useSupabase) {
-      this.supabase.from('printers').update({
-        name: printer.name,
-        type: printer.type,
-        status: printer.status,
-        nozzle_size: printer.nozzleSize,
-        build_volume: printer.buildVolume,
-        wattage: printer.wattage,
-        total_hours: printer.totalHours
-      }).eq('id', id).then();
+      try {
+        const { error } = await this.supabase.from('printers').update({
+          name: printer.name,
+          type: printer.type,
+          status: printer.status,
+          nozzle_size: printer.nozzleSize,
+          build_volume: printer.buildVolume || '',
+          wattage: printer.wattage,
+          total_hours: printer.totalHours,
+          notes: printer.notes || ''
+        }).eq('id', id);
+        if (error) console.error('Error actualizando impresora en Supabase:', error.message || error);
+      } catch (e) { console.error('Error actualizando impresora en Supabase:', e); }
     }
   }
 
@@ -346,64 +354,74 @@ class Store {
   getSpool(id) { return this.data.spools.find(s => s.id === id); }
 
   async addSpool(spool) {
-    spool.id = 's_' + Date.now();
+    spool.id = spool.id || ('s_' + Date.now());
     this.data.spools.push(spool);
     this.saveLocalStorageData();
 
     if (this.useSupabase) {
       try {
-        await this.supabase.from('spools').insert([{
+        const { error } = await this.supabase.from('spools').insert([{
           id: spool.id,
           name: spool.name,
           type: spool.type,
-          brand: spool.brand,
-          color: spool.color,
+          brand: spool.brand || '',
+          color: spool.color || '#00f2fe',
           initial_weight: spool.initialWeight,
           remaining_weight: spool.remainingWeight,
           cost: spool.cost,
           nozzle_temp: spool.nozzleTemp || '',
           bed_temp: spool.bedTemp || ''
         }]);
+        if (error) console.error('Error insertando carrete en Supabase:', error.message || error);
       } catch (e) { console.error('Error insertando spool en Supabase:', e); }
     }
     return spool;
   }
 
-  deleteSpool(id) {
+  async deleteSpool(id) {
     this.data.spools = this.data.spools.filter(s => s.id !== id);
     this.saveLocalStorageData();
     if (this.useSupabase) {
-      this.supabase.from('spools').delete().eq('id', id).then();
+      try {
+        const { error } = await this.supabase.from('spools').delete().eq('id', id);
+        if (error) console.error('Error eliminando carrete en Supabase:', error.message || error);
+      } catch (e) { console.error('Error eliminando carrete en Supabase:', e); }
     }
   }
 
-  updateSpool(id, updates) {
+  async updateSpool(id, updates) {
     const spool = this.data.spools.find(s => s.id === id);
     if (!spool) return;
     Object.assign(spool, updates);
     this.saveLocalStorageData();
     if (this.useSupabase) {
-      this.supabase.from('spools').update({
-        name: spool.name,
-        type: spool.type,
-        brand: spool.brand,
-        color: spool.color,
-        initial_weight: spool.initialWeight,
-        remaining_weight: spool.remainingWeight,
-        cost: spool.cost,
-        nozzle_temp: spool.nozzleTemp || '',
-        bed_temp: spool.bedTemp || ''
-      }).eq('id', id).then();
+      try {
+        const { error } = await this.supabase.from('spools').update({
+          name: spool.name,
+          type: spool.type,
+          brand: spool.brand || '',
+          color: spool.color || '#00f2fe',
+          initial_weight: spool.initialWeight,
+          remaining_weight: spool.remainingWeight,
+          cost: spool.cost,
+          nozzle_temp: spool.nozzleTemp || '',
+          bed_temp: spool.bedTemp || ''
+        }).eq('id', id);
+        if (error) console.error('Error actualizando carrete en Supabase:', error.message || error);
+      } catch (e) { console.error('Error actualizando carrete en Supabase:', e); }
     }
   }
 
-  consumeFilament(spoolId, grams) {
+  async consumeFilament(spoolId, grams) {
     const spool = this.getSpool(spoolId);
     if (spool) {
       spool.remainingWeight = Math.max(0, spool.remainingWeight - grams);
       this.saveLocalStorageData();
       if (this.useSupabase) {
-        this.supabase.from('spools').update({ remaining_weight: spool.remainingWeight }).eq('id', spoolId).then();
+        try {
+          const { error } = await this.supabase.from('spools').update({ remaining_weight: spool.remainingWeight }).eq('id', spoolId);
+          if (error) console.error('Error actualizando stock de filamento en Supabase:', error.message || error);
+        } catch (e) { console.error('Error consumiendo filamento en Supabase:', e); }
       }
     }
   }
@@ -412,7 +430,7 @@ class Store {
   getJobs() { return this.data.jobs; }
   
   async addJob(job) {
-    job.id = 'j_' + Date.now();
+    job.id = job.id || ('j_' + Date.now());
     job.date = job.date || new Date().toISOString().split('T')[0];
     job.labourHours = parseFloat(job.labourHours) || 0;
     this.data.jobs.unshift(job);
@@ -432,48 +450,57 @@ class Store {
 
     if (this.useSupabase) {
       try {
-        await this.supabase.from('jobs').insert([{
+        const { error } = await this.supabase.from('jobs').insert([{
           id: job.id,
           title: job.title,
-          printer_id: job.printerId,
-          spool_id: job.spoolId,
+          printer_id: job.printerId || null,
+          spool_id: job.spoolId || null,
           weight_grams: job.weightGrams,
           print_time_hours: job.printTimeHours,
           labour_hours: job.labourHours || 0,
           status: job.status,
           failure_reason: job.failureReason || '',
-          date: job.date
+          date: job.date || null
         }]);
+        if (error) console.error('Error insertando trabajo en Supabase:', error.message || error);
+        else console.log(`⚡ Trabajo "${job.title}" guardado en Supabase`);
       } catch (e) { console.error('Error insertando job en Supabase:', e); }
     }
     return job;
   }
 
-  deleteJob(id) {
+  async deleteJob(id) {
     this.data.jobs = this.data.jobs.filter(j => j.id !== id);
     this.saveLocalStorageData();
     if (this.useSupabase) {
-      this.supabase.from('jobs').delete().eq('id', id).then();
+      try {
+        const { error } = await this.supabase.from('jobs').delete().eq('id', id);
+        if (error) console.error('Error eliminando trabajo en Supabase:', error.message || error);
+      } catch (e) { console.error('Error eliminando job en Supabase:', e); }
     }
   }
 
-  updateJob(id, updates) {
+  async updateJob(id, updates) {
     const job = this.data.jobs.find(j => j.id === id);
     if (!job) return;
     Object.assign(job, updates);
     this.saveLocalStorageData();
     if (this.useSupabase) {
-      this.supabase.from('jobs').update({
-        title: job.title,
-        printer_id: job.printerId,
-        spool_id: job.spoolId,
-        weight_grams: job.weightGrams,
-        print_time_hours: job.printTimeHours,
-        labour_hours: job.labourHours || 0,
-        status: job.status,
-        failure_reason: job.failureReason || '',
-        date: job.date
-      }).eq('id', id).then();
+      try {
+        const { error } = await this.supabase.from('jobs').update({
+          title: job.title,
+          printer_id: job.printerId || null,
+          spool_id: job.spoolId || null,
+          weight_grams: job.weightGrams,
+          print_time_hours: job.printTimeHours,
+          labour_hours: job.labourHours || 0,
+          status: job.status,
+          failure_reason: job.failureReason || '',
+          date: job.date || null
+        }).eq('id', id);
+        if (error) console.error('Error actualizando trabajo en Supabase:', error.message || error);
+        else console.log(`⚡ Trabajo "${job.title}" actualizado correctamente en Supabase`);
+      } catch (e) { console.error('Error actualizando job en Supabase:', e); }
     }
   }
 
@@ -481,7 +508,7 @@ class Store {
   getSales() { return this.data.sales; }
 
   async addSale(sale) {
-    sale.id = 'v_' + Date.now();
+    sale.id = sale.id || ('v_' + Date.now());
     sale.date = sale.date || new Date().toISOString().split('T')[0];
     sale.profit = parseFloat((sale.salePrice - sale.totalCost).toFixed(2));
     this.data.sales.unshift(sale);
@@ -489,44 +516,52 @@ class Store {
 
     if (this.useSupabase) {
       try {
-        await this.supabase.from('sales').insert([{
+        const { error } = await this.supabase.from('sales').insert([{
           id: sale.id,
           job_title: sale.jobTitle,
           client_name: sale.clientName,
           sale_price: sale.salePrice,
           total_cost: sale.totalCost,
           profit: sale.profit,
-          payment_status: sale.paymentStatus
+          payment_status: sale.paymentStatus,
+          date: sale.date || null
         }]);
+        if (error) console.error('Error insertando venta en Supabase:', error.message || error);
       } catch (e) { console.error('Error insertando sale en Supabase:', e); }
     }
     return sale;
   }
 
-  deleteSale(id) {
+  async deleteSale(id) {
     this.data.sales = this.data.sales.filter(s => s.id !== id);
     this.saveLocalStorageData();
     if (this.useSupabase) {
-      this.supabase.from('sales').delete().eq('id', id).then();
+      try {
+        const { error } = await this.supabase.from('sales').delete().eq('id', id);
+        if (error) console.error('Error eliminando venta en Supabase:', error.message || error);
+      } catch (e) { console.error('Error eliminando sale en Supabase:', e); }
     }
   }
 
-  updateSale(id, updates) {
+  async updateSale(id, updates) {
     const sale = this.data.sales.find(s => s.id === id);
     if (!sale) return;
     Object.assign(sale, updates);
     sale.profit = parseFloat((sale.salePrice - sale.totalCost).toFixed(2));
     this.saveLocalStorageData();
     if (this.useSupabase) {
-      this.supabase.from('sales').update({
-        job_title: sale.jobTitle,
-        client_name: sale.clientName,
-        sale_price: sale.salePrice,
-        total_cost: sale.totalCost,
-        profit: sale.profit,
-        payment_status: sale.paymentStatus,
-        date: sale.date
-      }).eq('id', id).then();
+      try {
+        const { error } = await this.supabase.from('sales').update({
+          job_title: sale.jobTitle,
+          client_name: sale.clientName,
+          sale_price: sale.salePrice,
+          total_cost: sale.totalCost,
+          profit: sale.profit,
+          payment_status: sale.paymentStatus,
+          date: sale.date || null
+        }).eq('id', id);
+        if (error) console.error('Error actualizando venta en Supabase:', error.message || error);
+      } catch (e) { console.error('Error actualizando sale en Supabase:', e); }
     }
   }
 

@@ -366,9 +366,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelectorAll('.delete-printer-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         if (confirm('¿Eliminar esta impresora?')) {
-          store.deletePrinter(btn.getAttribute('data-id'));
+          await store.deletePrinter(btn.getAttribute('data-id'));
           renderPrinters();
         }
       });
@@ -447,9 +447,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelectorAll('.delete-spool-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         if (confirm('¿Eliminar este carrete de filamento?')) {
-          store.deleteSpool(btn.getAttribute('data-id'));
+          await store.deleteSpool(btn.getAttribute('data-id'));
           renderSpools();
         }
       });
@@ -508,8 +508,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!job) return;
         const pSel = document.getElementById('edit-job-printer-id');
         const sSel = document.getElementById('edit-job-spool-id');
-        pSel.innerHTML = store.getPrinters().map(p => `<option value="${p.id}" ${p.id === job.printerId ? 'selected' : ''}>${p.name}</option>`).join('');
-        sSel.innerHTML = store.getSpools().map(s => `<option value="${s.id}" ${s.id === job.spoolId ? 'selected' : ''}>${s.name} (${s.remainingWeight}g)</option>`).join('');
+        pSel.innerHTML = '<option value="">-- Sin Impresora --</option>' + 
+          store.getPrinters().map(p => `<option value="${p.id}" ${p.id === job.printerId ? 'selected' : ''}>${p.name}</option>`).join('');
+        sSel.innerHTML = '<option value="">-- Sin Carrete --</option>' + 
+          store.getSpools().map(s => `<option value="${s.id}" ${s.id === job.spoolId ? 'selected' : ''}>${s.name} (${s.remainingWeight}g)</option>`).join('');
         document.getElementById('edit-job-id').value = job.id;
         document.getElementById('edit-job-title').value = job.title;
         document.getElementById('edit-job-grams').value = job.weightGrams;
@@ -523,10 +525,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelectorAll('.delete-job-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         if (confirm('¿Eliminar este registro de trabajo?')) {
-          store.deleteJob(btn.getAttribute('data-id'));
-          renderJobs(getJobFilters());
+          await store.deleteJob(btn.getAttribute('data-id'));
+          renderJobs(...getJobFilters());
         }
       });
     });
@@ -608,9 +610,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelectorAll('.delete-sale-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         if (confirm('¿Eliminar este registro de venta?')) {
-          store.deleteSale(btn.getAttribute('data-id'));
+          await store.deleteSale(btn.getAttribute('data-id'));
           renderSales(...getSaleFilters());
         }
       });
@@ -878,9 +880,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    document.getElementById('form-printer')?.addEventListener('submit', (e) => {
+    document.getElementById('form-printer')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      store.addPrinter({
+      await store.addPrinter({
         name: document.getElementById('printer-name').value,
         type: document.getElementById('printer-type').value,
         status: document.getElementById('printer-status').value,
@@ -893,9 +895,9 @@ document.addEventListener('DOMContentLoaded', () => {
       renderPrinters();
     });
 
-    document.getElementById('form-spool')?.addEventListener('submit', (e) => {
+    document.getElementById('form-spool')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      store.addSpool({
+      await store.addSpool({
         name: document.getElementById('spool-name').value,
         type: document.getElementById('spool-type').value,
         brand: document.getElementById('spool-brand').value,
@@ -910,9 +912,9 @@ document.addEventListener('DOMContentLoaded', () => {
       renderSpools();
     });
 
-    document.getElementById('form-job')?.addEventListener('submit', (e) => {
+    document.getElementById('form-job')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      store.addJob({
+      await store.addJob({
         title: document.getElementById('job-title').value,
         printerId: document.getElementById('job-printer-id').value,
         spoolId: document.getElementById('job-spool-id').value,
@@ -924,12 +926,12 @@ document.addEventListener('DOMContentLoaded', () => {
         failureReason: document.getElementById('job-failure-reason').value
       });
       closeModal();
-      renderJobs();
+      renderJobs(...getJobFilters());
     });
 
-    document.getElementById('form-sale')?.addEventListener('submit', (e) => {
+    document.getElementById('form-sale')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      store.addSale({
+      await store.addSale({
         jobTitle: document.getElementById('sale-title').value,
         clientName: document.getElementById('sale-client').value,
         salePrice: parseFloat(document.getElementById('sale-price').value) || 0,
@@ -940,10 +942,10 @@ document.addEventListener('DOMContentLoaded', () => {
       renderSales();
     });
 
-    document.getElementById('form-edit-printer')?.addEventListener('submit', (e) => {
+    document.getElementById('form-edit-printer')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const id = document.getElementById('edit-printer-id').value;
-      store.updatePrinter(id, {
+      await store.updatePrinter(id, {
         name: document.getElementById('edit-printer-name').value,
         type: document.getElementById('edit-printer-type').value,
         status: document.getElementById('edit-printer-status').value,
@@ -957,10 +959,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Edit Spool
-    document.getElementById('form-edit-spool')?.addEventListener('submit', (e) => {
+    document.getElementById('form-edit-spool')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const id = document.getElementById('edit-spool-id').value;
-      store.updateSpool(id, {
+      await store.updateSpool(id, {
         name: document.getElementById('edit-spool-name').value,
         type: document.getElementById('edit-spool-type').value,
         brand: document.getElementById('edit-spool-brand').value,
@@ -976,10 +978,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Edit Job
-    document.getElementById('form-edit-job')?.addEventListener('submit', (e) => {
+    document.getElementById('form-edit-job')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const id = document.getElementById('edit-job-id').value;
-      store.updateJob(id, {
+      await store.updateJob(id, {
         title: document.getElementById('edit-job-title').value,
         printerId: document.getElementById('edit-job-printer-id').value,
         spoolId: document.getElementById('edit-job-spool-id').value,
@@ -995,10 +997,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Edit Sale
-    document.getElementById('form-edit-sale')?.addEventListener('submit', (e) => {
+    document.getElementById('form-edit-sale')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const id = document.getElementById('edit-sale-id').value;
-      store.updateSale(id, {
+      await store.updateSale(id, {
         jobTitle: document.getElementById('edit-sale-title').value,
         clientName: document.getElementById('edit-sale-client').value,
         salePrice: parseFloat(document.getElementById('edit-sale-price').value) || 0,
@@ -1070,10 +1072,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const pSel = document.getElementById('job-printer-id');
     const sSel = document.getElementById('job-spool-id');
     if (pSel) {
-      pSel.innerHTML = store.getPrinters().map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+      pSel.innerHTML = '<option value="">-- Sin Impresora --</option>' +
+        store.getPrinters().map(p => `<option value="${p.id}">${p.name}</option>`).join('');
     }
     if (sSel) {
-      sSel.innerHTML = store.getSpools().map(s => `<option value="${s.id}">${s.name} (${s.remainingWeight}g restantes)</option>`).join('');
+      sSel.innerHTML = '<option value="">-- Sin Carrete --</option>' +
+        store.getSpools().map(s => `<option value="${s.id}">${s.name} (${s.remainingWeight}g restantes)</option>`).join('');
     }
   }
 
