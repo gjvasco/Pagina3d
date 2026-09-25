@@ -147,6 +147,8 @@ class Store {
   async pushAllToSupabase() {
     if (!this.useSupabase || !this.supabase) return false;
 
+    let hasError = false;
+
     try {
       if (this.data.printers && this.data.printers.length > 0) {
         const pRows = this.data.printers.map(p => ({
@@ -155,12 +157,16 @@ class Store {
           type: p.type,
           status: p.status,
           nozzle_size: p.nozzleSize,
-          build_volume: p.buildVolume,
+          build_volume: p.buildVolume || '',
           wattage: p.wattage,
-          total_hours: p.totalHours,
+          total_hours: p.totalHours || 0,
           notes: p.notes || ''
         }));
-        await this.supabase.from('printers').upsert(pRows, { onConflict: 'id' });
+        const { error } = await this.supabase.from('printers').upsert(pRows, { onConflict: 'id' });
+        if (error) {
+          console.error('Error al subir impresoras a Supabase:', error.message || error);
+          hasError = true;
+        }
       }
 
       if (this.data.spools && this.data.spools.length > 0) {
@@ -168,31 +174,49 @@ class Store {
           id: s.id,
           name: s.name,
           type: s.type,
-          brand: s.brand,
-          color: s.color,
+          brand: s.brand || '',
+          color: s.color || '#00f2fe',
           initial_weight: s.initialWeight,
           remaining_weight: s.remainingWeight,
           cost: s.cost,
           nozzle_temp: s.nozzleTemp || '',
           bed_temp: s.bedTemp || ''
         }));
-        await this.supabase.from('spools').upsert(sRows, { onConflict: 'id' });
+        let { error } = await this.supabase.from('spools').upsert(sRows, { onConflict: 'id' });
+        if (error && error.message && (error.message.includes('nozzle_temp') || error.message.includes('bed_temp'))) {
+          const sRowsFallback = sRows.map(r => { const c = {...r}; delete c.nozzle_temp; delete c.bed_temp; return c; });
+          const retry = await this.supabase.from('spools').upsert(sRowsFallback, { onConflict: 'id' });
+          error = retry.error;
+        }
+        if (error) {
+          console.error('Error al subir carretes a Supabase:', error.message || error);
+          hasError = true;
+        }
       }
 
       if (this.data.jobs && this.data.jobs.length > 0) {
         const jRows = this.data.jobs.map(j => ({
           id: j.id,
           title: j.title,
-          printer_id: j.printerId,
-          spool_id: j.spoolId,
-          weight_grams: j.weightGrams,
-          print_time_hours: j.printTimeHours,
+          printer_id: j.printerId || null,
+          spool_id: j.spoolId || null,
+          weight_grams: j.weightGrams || 0,
+          print_time_hours: j.printTimeHours || 0,
           labour_hours: j.labourHours || 0,
           status: j.status,
           failure_reason: j.failureReason || '',
           date: j.date || new Date().toISOString().split('T')[0]
         }));
-        await this.supabase.from('jobs').upsert(jRows, { onConflict: 'id' });
+        let { error } = await this.supabase.from('jobs').upsert(jRows, { onConflict: 'id' });
+        if (error && error.message && error.message.includes('labour_hours')) {
+          const jRowsFallback = jRows.map(r => { const c = {...r}; delete c.labour_hours; return c; });
+          const retry = await this.supabase.from('jobs').upsert(jRowsFallback, { onConflict: 'id' });
+          error = retry.error;
+        }
+        if (error) {
+          console.error('Error al subir trabajos a Supabase:', error.message || error);
+          hasError = true;
+        }
       }
 
       if (this.data.sales && this.data.sales.length > 0) {
@@ -206,11 +230,17 @@ class Store {
           payment_status: v.paymentStatus,
           date: v.date || new Date().toISOString().split('T')[0]
         }));
-        await this.supabase.from('sales').upsert(vRows, { onConflict: 'id' });
+        const { error } = await this.supabase.from('sales').upsert(vRows, { onConflict: 'id' });
+        if (error) {
+          console.error('Error al subir ventas a Supabase:', error.message || error);
+          hasError = true;
+        }
       }
 
-      console.log('⚡ ¡Todos los datos locales subidos a Supabase con éxito!');
-      return true;
+      if (!hasError) {
+        console.log('⚡ ¡Todos los datos locales subidos a Supabase con éxito!');
+      }
+      return !hasError;
     } catch (e) {
       console.error('Error al subir datos a Supabase:', e);
       return false;
@@ -219,9 +249,9 @@ class Store {
 
   async syncAllWithSupabase() {
     if (!this.useSupabase || !this.supabase) return false;
-    await this.pushAllToSupabase();
+    const pushed = await this.pushAllToSupabase();
     await this.syncFromSupabase();
-    return true;
+    return pushed;
   }
 
   async replaceSupabaseWithLocalData() {

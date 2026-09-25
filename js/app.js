@@ -795,13 +795,13 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.textContent = 'Subiendo a la nube...';
       const success = await store.syncAllWithSupabase();
       btn.disabled = false;
-      btn.textContent = '☁️ Subir Datos Locales a Supabase';
+      btn.textContent = '☁️ Mezclar Datos con Supabase';
       if (success) {
-        alert('⚡ ¡Tus datos locales (impresoras, filamentos, trabajos, ventas) se han subido a Supabase con éxito!');
+        alert('⚡ ¡Tus datos locales (impresoras, filamentos, trabajos, ventas) se han subido y mezclado con Supabase con éxito!');
         closeModal();
         location.reload();
       } else {
-        alert('❌ Error al subir a Supabase. Verifica las tablas de tu proyecto.');
+        alert('❌ Error al sincronizar con Supabase. Revisa la consola o verifica el esquema de tablas en Supabase.');
       }
     });
 
