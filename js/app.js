@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Render Recent Active Jobs List
     const recentList = document.getElementById('recent-jobs-list');
     if (recentList) {
-      recentList.innerHTML = jobs.slice(0, 4).map(job => {
+      recentList.innerHTML = jobs.map(job => {
         const printer = store.getPrinter(job.printerId);
         return `
           <tr>

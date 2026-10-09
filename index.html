@@ -246,12 +246,12 @@
         <div class="grid-2col">
           <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
-              <h3>Trabajos Recientes</h3>
-              <span class="text-muted" style="font-size:0.75rem;">👈 Desliza 📁</span>
+              <h3>Historial de Trabajos</h3>
+              <span class="text-muted" style="font-size:0.75rem;">↕️ Desliza arriba/abajo 📜</span>
             </div>
-            <div class="table-container">
-              <table>
-                <thead>
+            <div class="table-container" style="max-height: 250px; overflow-y: auto;">
+              <table style="width: 100%;">
+                <thead style="position: sticky; top: 0; background: rgba(18, 24, 38, 0.95); backdrop-filter: blur(10px); z-index: 2;">
                   <tr>
                     <th>Proyecto</th>
                     <th>Impresora</th>
