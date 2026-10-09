@@ -708,6 +708,37 @@
           <label class="form-label">Motivo de Fallo (Si aplica)</label>
           <input type="text" class="form-control" id="job-failure-reason" placeholder="Ej: Desprendimiento de cama">
         </div>
+
+        <!-- Opción de Vincular Venta -->
+        <div style="background:rgba(0, 242, 254, 0.05); border:1px solid rgba(0, 242, 254, 0.25); border-radius:12px; padding:1rem; margin-bottom:1.25rem;">
+          <label style="display:flex; align-items:center; gap:0.6rem; cursor:pointer; font-weight:600; color:var(--accent-cyan); font-size:0.95rem; user-select:none;">
+            <input type="checkbox" id="job-is-sale-checkbox" style="width:18px; height:18px; accent-color:var(--accent-cyan); cursor:pointer;">
+            🛒 ¿Este trabajo es una venta para cliente?
+          </label>
+          <div id="job-sale-fields" style="display:none; margin-top:0.85rem; border-top:1px dashed rgba(0, 242, 254, 0.25); padding-top:0.85rem;">
+            <div class="form-group" style="margin-bottom:0.75rem;">
+              <label class="form-label">Nombre del Cliente</label>
+              <input type="text" class="form-control" id="job-client-name" placeholder="Ej: Juan Pérez / Cliente Taller">
+            </div>
+            <div class="form-row">
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">Precio de Venta ($)</label>
+                <input type="number" step="0.1" class="form-control" id="job-sale-price" placeholder="Auto-calculado si se deja vacío">
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">Estado del Pago</label>
+                <select class="form-control" id="job-payment-status">
+                  <option value="pendiente">Pendiente de Pago</option>
+                  <option value="pagado">Pagado</option>
+                </select>
+              </div>
+            </div>
+            <div id="job-sale-calc-hint" style="font-size:0.78rem; color:var(--text-muted); margin-top:0.6rem;">
+              💡 El coste real y margen se calcularán automáticamente según el filamento, tiempo y consumo.
+            </div>
+          </div>
+        </div>
+
         <button type="submit" class="btn btn-primary" style="width:100%;">Registrar Trabajo</button>
       </form>
     </div>
@@ -721,6 +752,13 @@
         <button class="modal-close">&times;</button>
       </div>
       <form id="form-sale">
+        <div class="form-group">
+          <label class="form-label">🔗 Vincular a Trabajo de Impresión (Opcional)</label>
+          <select class="form-control" id="sale-job-id"></select>
+          <div id="sale-job-autofill-info" style="display:none; font-size:0.78rem; color:var(--accent-cyan); margin-top:0.4rem; background:rgba(0,242,254,0.08); padding:0.4rem 0.6rem; border-radius:6px;">
+            ✨ Coste real y precio sugerido auto-calculados desde los parámetros del trabajo.
+          </div>
+        </div>
         <div class="form-group">
           <label class="form-label">Nombre del Producto / Trabajo</label>
           <input type="text" class="form-control" id="sale-title" placeholder="Ej: Figura de Resina" required>
@@ -902,6 +940,34 @@
           <label class="form-label">Motivo de Fallo (Si aplica)</label>
           <input type="text" class="form-control" id="edit-job-failure-reason">
         </div>
+
+        <!-- Opción de Vincular Venta en Edición -->
+        <div style="background:rgba(0, 242, 254, 0.05); border:1px solid rgba(0, 242, 254, 0.25); border-radius:12px; padding:1rem; margin-bottom:1.25rem;">
+          <label style="display:flex; align-items:center; gap:0.6rem; cursor:pointer; font-weight:600; color:var(--accent-cyan); font-size:0.95rem; user-select:none;">
+            <input type="checkbox" id="edit-job-is-sale-checkbox" style="width:18px; height:18px; accent-color:var(--accent-cyan); cursor:pointer;">
+            🛒 Vincular / Actualizar Venta para este trabajo
+          </label>
+          <div id="edit-job-sale-fields" style="display:none; margin-top:0.85rem; border-top:1px dashed rgba(0, 242, 254, 0.25); padding-top:0.85rem;">
+            <div class="form-group" style="margin-bottom:0.75rem;">
+              <label class="form-label">Nombre del Cliente</label>
+              <input type="text" class="form-control" id="edit-job-client-name" placeholder="Ej: Juan Pérez / Cliente Taller">
+            </div>
+            <div class="form-row">
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">Precio de Venta ($)</label>
+                <input type="number" step="0.1" class="form-control" id="edit-job-sale-price" placeholder="Precio de venta">
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">Estado del Pago</label>
+                <select class="form-control" id="edit-job-payment-status">
+                  <option value="pendiente">Pendiente de Pago</option>
+                  <option value="pagado">Pagado</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <button type="submit" class="btn btn-primary" style="width:100%;">Guardar Cambios</button>
       </form>
     </div>
@@ -916,6 +982,10 @@
       </div>
       <form id="form-edit-sale">
         <input type="hidden" id="edit-sale-id">
+        <div class="form-group">
+          <label class="form-label">🔗 Vincular a Trabajo de Impresión (Opcional)</label>
+          <select class="form-control" id="edit-sale-job-id"></select>
+        </div>
         <div class="form-group">
           <label class="form-label">Nombre del Producto / Trabajo</label>
           <input type="text" class="form-control" id="edit-sale-title" required>

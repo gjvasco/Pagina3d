@@ -462,6 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!tbody) return;
 
     let jobs = store.getJobs();
+    const currency = store.getSettings().currencySymbol || '$';
 
     // Apply filters
     if (filterSearch) {
@@ -478,11 +479,19 @@ document.addEventListener('DOMContentLoaded', () => {
     tbody.innerHTML = jobs.map(j => {
       const printer = store.getPrinter(j.printerId);
       const spool = store.getSpool(j.spoolId);
+      const linkedSale = store.getSaleForJob(j.id);
 
       return `
         <tr>
           <td>
             <strong>${escapeHtml(j.title)}</strong>
+            ${linkedSale ? `
+              <div style="font-size:0.75rem; margin-top:3px;">
+                <span class="badge ${linkedSale.paymentStatus === 'pagado' ? 'badge-completed' : 'badge-maintenance'} linked-sale-badge" data-sale-id="${linkedSale.id}" style="cursor:pointer;" title="Ver/Editar Venta">
+                  🛒 Venta: ${currency}${linkedSale.salePrice.toFixed(2)} (${linkedSale.paymentStatus})
+                </span>
+              </div>
+            ` : ''}
             ${j.failureReason ? `<div style="font-size:0.75rem; color:var(--accent-red); margin-top:2px;">⚠️ ${escapeHtml(j.failureReason)}</div>` : ''}
           </td>
           <td>${printer ? escapeHtml(printer.name) : 'N/A'}</td>
@@ -495,12 +504,34 @@ document.addEventListener('DOMContentLoaded', () => {
           <td style="font-size:0.8rem; color:var(--text-muted);">${j.date || '-'}</td>
           <td><span class="badge badge-${j.status}">${j.status}</span></td>
           <td style="white-space:nowrap;">
-            <button class="btn btn-secondary btn-icon-only edit-job-btn" data-id="${j.id}" title="Editar">✏️</button>
-            <button class="btn btn-danger btn-icon-only delete-job-btn" data-id="${j.id}">🗑️</button>
+            <button class="btn btn-secondary btn-icon-only create-sale-from-job-btn" data-job-id="${j.id}" title="${linkedSale ? 'Ver/Editar Venta Vinculada' : 'Convertir en Venta'}">🛒</button>
+            <button class="btn btn-secondary btn-icon-only edit-job-btn" data-id="${j.id}" title="Editar Trabajo">✏️</button>
+            <button class="btn btn-danger btn-icon-only delete-job-btn" data-id="${j.id}" title="Eliminar Trabajo">🗑️</button>
           </td>
         </tr>
       `;
     }).join('') || '<tr><td colspan="9" class="text-muted">No hay trabajos que coincidan.</td></tr>';
+
+    // Bind linked sale badge clicks
+    document.querySelectorAll('.linked-sale-badge').forEach(badge => {
+      badge.addEventListener('click', () => {
+        const saleId = badge.getAttribute('data-sale-id');
+        openEditSaleModal(saleId);
+      });
+    });
+
+    // Bind Convert/Link Sale button
+    document.querySelectorAll('.create-sale-from-job-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const jobId = btn.getAttribute('data-job-id');
+        const existingSale = store.getSaleForJob(jobId);
+        if (existingSale) {
+          openEditSaleModal(existingSale.id);
+        } else {
+          openCreateSaleForJobModal(jobId);
+        }
+      });
+    });
 
     document.querySelectorAll('.edit-job-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -520,6 +551,26 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('edit-job-date').value = job.date || '';
         document.getElementById('edit-job-status').value = job.status;
         document.getElementById('edit-job-failure-reason').value = job.failureReason || '';
+
+        // Check if linked sale exists
+        const linkedSale = store.getSaleForJob(job.id);
+        const chk = document.getElementById('edit-job-is-sale-checkbox');
+        const fields = document.getElementById('edit-job-sale-fields');
+        if (chk && fields) {
+          if (linkedSale) {
+            chk.checked = true;
+            fields.style.display = 'block';
+            document.getElementById('edit-job-client-name').value = linkedSale.clientName || '';
+            document.getElementById('edit-job-sale-price').value = linkedSale.salePrice || '';
+            document.getElementById('edit-job-payment-status').value = linkedSale.paymentStatus || 'pendiente';
+          } else {
+            chk.checked = false;
+            fields.style.display = 'none';
+            document.getElementById('edit-job-client-name').value = '';
+            document.getElementById('edit-job-sale-price').value = '';
+            document.getElementById('edit-job-payment-status').value = 'pendiente';
+          }
+        }
         openModal('modal-edit-job');
       });
     });
@@ -578,34 +629,31 @@ document.addEventListener('DOMContentLoaded', () => {
       sales = sales.filter(v => v.paymentStatus === filterStatus);
     }
 
-    tbody.innerHTML = sales.map(s => `
-      <tr>
-        <td><strong>${escapeHtml(s.jobTitle)}</strong></td>
-        <td>${escapeHtml(s.clientName)}</td>
-        <td>${currency}${s.salePrice.toFixed(2)}</td>
-        <td>${currency}${s.totalCost.toFixed(2)}</td>
-        <td><strong style="color:var(--accent-green);">${currency}${s.profit.toFixed(2)}</strong></td>
-        <td><span class="badge ${s.paymentStatus === 'pagado' ? 'badge-completed' : 'badge-maintenance'}">${s.paymentStatus}</span></td>
-        <td style="font-size:0.8rem; color:var(--text-muted);">${s.date || '-'}</td>
-        <td style="white-space:nowrap;">
-          <button class="btn btn-secondary btn-icon-only edit-sale-btn" data-id="${s.id}" title="Editar">✏️</button>
-          <button class="btn btn-danger btn-icon-only delete-sale-btn" data-id="${s.id}">🗑️</button>
-        </td>
-      </tr>
-    `).join('') || '<tr><td colspan="8" class="text-muted">No hay ventas que coincidan.</td></tr>';
+    tbody.innerHTML = sales.map(s => {
+      const linkedJob = s.jobId ? store.getJob(s.jobId) : null;
+      return `
+        <tr>
+          <td>
+            <strong>${escapeHtml(s.jobTitle)}</strong>
+            ${linkedJob ? `<div style="font-size:0.72rem; color:var(--accent-cyan); margin-top:2px;">📄 Trabajo: ${escapeHtml(linkedJob.title)} (${linkedJob.weightGrams}g, ${linkedJob.printTimeHours}h)</div>` : ''}
+          </td>
+          <td>${escapeHtml(s.clientName)}</td>
+          <td>${currency}${s.salePrice.toFixed(2)}</td>
+          <td>${currency}${s.totalCost.toFixed(2)}</td>
+          <td><strong style="color:var(--accent-green);">${currency}${s.profit.toFixed(2)}</strong></td>
+          <td><span class="badge ${s.paymentStatus === 'pagado' ? 'badge-completed' : 'badge-maintenance'}">${s.paymentStatus}</span></td>
+          <td style="font-size:0.8rem; color:var(--text-muted);">${s.date || '-'}</td>
+          <td style="white-space:nowrap;">
+            <button class="btn btn-secondary btn-icon-only edit-sale-btn" data-id="${s.id}" title="Editar">✏️</button>
+            <button class="btn btn-danger btn-icon-only delete-sale-btn" data-id="${s.id}">🗑️</button>
+          </td>
+        </tr>
+      `;
+    }).join('') || '<tr><td colspan="8" class="text-muted">No hay ventas que coincidan.</td></tr>';
 
     document.querySelectorAll('.edit-sale-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const sale = store.getSales().find(s => s.id === btn.getAttribute('data-id'));
-        if (!sale) return;
-        document.getElementById('edit-sale-id').value = sale.id;
-        document.getElementById('edit-sale-title').value = sale.jobTitle;
-        document.getElementById('edit-sale-client').value = sale.clientName;
-        document.getElementById('edit-sale-price').value = sale.salePrice;
-        document.getElementById('edit-sale-cost').value = sale.totalCost;
-        document.getElementById('edit-sale-payment-status').value = sale.paymentStatus;
-        document.getElementById('edit-sale-date').value = sale.date || '';
-        openModal('modal-edit-sale');
+        openEditSaleModal(btn.getAttribute('data-id'));
       });
     });
 
@@ -614,6 +662,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm('¿Eliminar este registro de venta?')) {
           await store.deleteSale(btn.getAttribute('data-id'));
           renderSales(...getSaleFilters());
+          renderJobs(...getJobFilters());
         }
       });
     });
@@ -736,6 +785,59 @@ document.addEventListener('DOMContentLoaded', () => {
     openModal('modal-sale');
   });
 
+  function populateSaleJobDropdowns(selectedJobId = '') {
+    const saleJobSel = document.getElementById('sale-job-id');
+    const editSaleJobSel = document.getElementById('edit-sale-job-id');
+    const jobs = store.getJobs();
+    const optionsHtml = '<option value="">-- Sin Trabajo Vinculado --</option>' +
+      jobs.map(j => `<option value="${j.id}">${escapeHtml(j.title)} (${j.weightGrams}g, ${j.date || ''})</option>`).join('');
+
+    if (saleJobSel) {
+      saleJobSel.innerHTML = optionsHtml;
+      saleJobSel.value = selectedJobId || '';
+    }
+    if (editSaleJobSel) {
+      editSaleJobSel.innerHTML = optionsHtml;
+      editSaleJobSel.value = selectedJobId || '';
+    }
+  }
+
+  function openCreateSaleForJobModal(jobId) {
+    const job = store.getJob(jobId);
+    if (!job) return;
+    populateSaleJobDropdowns(jobId);
+
+    const costs = store.calculateJobCost(job);
+
+    document.getElementById('sale-title').value = job.title;
+    document.getElementById('sale-client').value = '';
+    document.getElementById('sale-cost').value = costs.totalCost;
+    document.getElementById('sale-price').value = costs.suggestedPrice;
+    document.getElementById('sale-payment-status').value = 'pendiente';
+
+    const info = document.getElementById('sale-job-autofill-info');
+    if (info) {
+      info.style.display = 'block';
+      info.textContent = `✨ Trabajo "${job.title}" vinculado: Coste real $${costs.totalCost} | Precio sugerido $${costs.suggestedPrice}`;
+    }
+
+    openModal('modal-sale');
+  }
+
+  function openEditSaleModal(saleId) {
+    const sale = store.getSales().find(s => s.id === saleId);
+    if (!sale) return;
+    populateSaleJobDropdowns(sale.jobId || '');
+    document.getElementById('edit-sale-id').value = sale.id;
+    document.getElementById('edit-sale-title').value = sale.jobTitle;
+    document.getElementById('edit-sale-client').value = sale.clientName;
+    document.getElementById('edit-sale-price').value = sale.salePrice;
+    document.getElementById('edit-sale-cost').value = sale.totalCost;
+    document.getElementById('edit-sale-payment-status').value = sale.paymentStatus;
+    document.getElementById('edit-sale-date').value = sale.date || '';
+    openModal('modal-edit-sale');
+  }
+
   // --- 7. MODAL DIALOGS LOGIC ---
   function setupModals() {
     // Open Modal Handlers
@@ -755,9 +857,83 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-add-spool')?.addEventListener('click', () => openModal('modal-spool'));
     document.getElementById('btn-add-job')?.addEventListener('click', () => {
       populateJobModalDropdowns();
+      const chk = document.getElementById('job-is-sale-checkbox');
+      const fields = document.getElementById('job-sale-fields');
+      if (chk) chk.checked = false;
+      if (fields) fields.style.display = 'none';
       openModal('modal-job');
     });
-    document.getElementById('btn-add-sale')?.addEventListener('click', () => openModal('modal-sale'));
+    document.getElementById('btn-add-sale')?.addEventListener('click', () => {
+      populateSaleJobDropdowns();
+      const info = document.getElementById('sale-job-autofill-info');
+      if (info) info.style.display = 'none';
+      openModal('modal-sale');
+    });
+
+    // Checkbox toggle for Job -> Sale
+    const jobIsSaleCheckbox = document.getElementById('job-is-sale-checkbox');
+    const jobSaleFields = document.getElementById('job-sale-fields');
+    jobIsSaleCheckbox?.addEventListener('change', () => {
+      if (jobIsSaleCheckbox.checked) {
+        jobSaleFields.style.display = 'block';
+        const weight = parseFloat(document.getElementById('job-grams')?.value) || 0;
+        const hours = parseFloat(document.getElementById('job-hours')?.value) || 0;
+        const spoolId = document.getElementById('job-spool-id')?.value;
+        const printerId = document.getElementById('job-printer-id')?.value;
+        const labourHours = parseFloat(document.getElementById('job-labour-hours')?.value) || 0;
+
+        if (weight > 0 && hours > 0) {
+          const dummyJob = { spoolId, printerId, weightGrams: weight, printTimeHours: hours, labourHours };
+          const costs = store.calculateJobCost(dummyJob);
+          const priceInput = document.getElementById('job-sale-price');
+          if (priceInput && !priceInput.value) {
+            priceInput.value = costs.suggestedPrice;
+          }
+        }
+      } else {
+        jobSaleFields.style.display = 'none';
+      }
+    });
+
+    const editJobIsSaleCheckbox = document.getElementById('edit-job-is-sale-checkbox');
+    const editJobSaleFields = document.getElementById('edit-job-sale-fields');
+    editJobIsSaleCheckbox?.addEventListener('change', () => {
+      editJobSaleFields.style.display = editJobIsSaleCheckbox.checked ? 'block' : 'none';
+    });
+
+    // Dropdown change for sale-job-id in modal-sale
+    document.getElementById('sale-job-id')?.addEventListener('change', (e) => {
+      const selectedJobId = e.target.value;
+      const info = document.getElementById('sale-job-autofill-info');
+      if (selectedJobId) {
+        const job = store.getJob(selectedJobId);
+        if (job) {
+          const costs = store.calculateJobCost(job);
+          document.getElementById('sale-title').value = job.title;
+          document.getElementById('sale-cost').value = costs.totalCost;
+          document.getElementById('sale-price').value = costs.suggestedPrice;
+          if (info) {
+            info.style.display = 'block';
+            info.textContent = `✨ Trabajo "${job.title}" vinculado: Coste real $${costs.totalCost} | Precio sugerido $${costs.suggestedPrice}`;
+          }
+        }
+      } else {
+        if (info) info.style.display = 'none';
+      }
+    });
+
+    document.getElementById('edit-sale-job-id')?.addEventListener('change', (e) => {
+      const selectedJobId = e.target.value;
+      if (selectedJobId) {
+        const job = store.getJob(selectedJobId);
+        if (job) {
+          const costs = store.calculateJobCost(job);
+          if (!document.getElementById('edit-sale-cost').value) {
+            document.getElementById('edit-sale-cost').value = costs.totalCost;
+          }
+        }
+      }
+    });
 
     // Close Modal Handler
     document.querySelectorAll('.modal-close').forEach(btn => {
@@ -914,24 +1090,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('form-job')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      await store.addJob({
-        title: document.getElementById('job-title').value,
-        printerId: document.getElementById('job-printer-id').value,
-        spoolId: document.getElementById('job-spool-id').value,
-        weightGrams: parseInt(document.getElementById('job-grams').value) || 0,
-        printTimeHours: parseFloat(document.getElementById('job-hours').value) || 0,
-        labourHours: parseFloat(document.getElementById('job-labour-hours')?.value) || 0,
-        date: document.getElementById('job-date')?.value || new Date().toISOString().split('T')[0],
-        status: document.getElementById('job-status').value,
-        failureReason: document.getElementById('job-failure-reason').value
+      const jobTitle = document.getElementById('job-title').value;
+      const printerId = document.getElementById('job-printer-id').value;
+      const spoolId = document.getElementById('job-spool-id').value;
+      const weightGrams = parseInt(document.getElementById('job-grams').value) || 0;
+      const printTimeHours = parseFloat(document.getElementById('job-hours').value) || 0;
+      const labourHours = parseFloat(document.getElementById('job-labour-hours')?.value) || 0;
+      const date = document.getElementById('job-date')?.value || new Date().toISOString().split('T')[0];
+      const status = document.getElementById('job-status').value;
+      const failureReason = document.getElementById('job-failure-reason').value;
+
+      const createdJob = await store.addJob({
+        title: jobTitle,
+        printerId,
+        spoolId,
+        weightGrams,
+        printTimeHours,
+        labourHours,
+        date,
+        status,
+        failureReason
       });
+
+      const isSale = document.getElementById('job-is-sale-checkbox')?.checked;
+      if (isSale && createdJob) {
+        const costs = store.calculateJobCost(createdJob);
+        const clientName = document.getElementById('job-client-name')?.value.trim() || 'Cliente General';
+        const salePriceInput = document.getElementById('job-sale-price')?.value;
+        const salePrice = salePriceInput ? parseFloat(salePriceInput) : parseFloat(costs.suggestedPrice);
+        const paymentStatus = document.getElementById('job-payment-status')?.value || 'pendiente';
+
+        await store.addSale({
+          jobId: createdJob.id,
+          jobTitle: createdJob.title,
+          clientName: clientName,
+          salePrice: salePrice,
+          totalCost: parseFloat(costs.totalCost),
+          paymentStatus: paymentStatus,
+          date: createdJob.date
+        });
+        showToast(`✅ Trabajo y Venta (${store.getSettings().currencySymbol || '$'}${salePrice.toFixed(2)}) registrados.`);
+      } else {
+        showToast('✅ Trabajo de impresión registrado.');
+      }
+
       closeModal();
+      document.getElementById('form-job').reset();
+      const fields = document.getElementById('job-sale-fields');
+      if (fields) fields.style.display = 'none';
       renderJobs(...getJobFilters());
     });
 
     document.getElementById('form-sale')?.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const jobId = document.getElementById('sale-job-id')?.value || null;
       await store.addSale({
+        jobId: jobId,
         jobTitle: document.getElementById('sale-title').value,
         clientName: document.getElementById('sale-client').value,
         salePrice: parseFloat(document.getElementById('sale-price').value) || 0,
@@ -939,7 +1153,9 @@ document.addEventListener('DOMContentLoaded', () => {
         paymentStatus: document.getElementById('sale-payment-status').value
       });
       closeModal();
+      document.getElementById('form-sale').reset();
       renderSales();
+      renderJobs(...getJobFilters());
     });
 
     document.getElementById('form-edit-printer')?.addEventListener('submit', async (e) => {
@@ -981,7 +1197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('form-edit-job')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const id = document.getElementById('edit-job-id').value;
-      await store.updateJob(id, {
+      const updatedData = {
         title: document.getElementById('edit-job-title').value,
         printerId: document.getElementById('edit-job-printer-id').value,
         spoolId: document.getElementById('edit-job-spool-id').value,
@@ -991,7 +1207,41 @@ document.addEventListener('DOMContentLoaded', () => {
         date: document.getElementById('edit-job-date')?.value || new Date().toISOString().split('T')[0],
         status: document.getElementById('edit-job-status').value,
         failureReason: document.getElementById('edit-job-failure-reason').value
-      });
+      };
+
+      await store.updateJob(id, updatedData);
+
+      const isSale = document.getElementById('edit-job-is-sale-checkbox')?.checked;
+      if (isSale) {
+        const existingSale = store.getSaleForJob(id);
+        const updatedJob = store.getJob(id);
+        const costs = store.calculateJobCost(updatedJob);
+        const clientName = document.getElementById('edit-job-client-name')?.value.trim() || 'Cliente General';
+        const salePriceInput = document.getElementById('edit-job-sale-price')?.value;
+        const salePrice = salePriceInput ? parseFloat(salePriceInput) : parseFloat(costs.suggestedPrice);
+        const paymentStatus = document.getElementById('edit-job-payment-status')?.value || 'pendiente';
+
+        if (existingSale) {
+          await store.updateSale(existingSale.id, {
+            jobTitle: updatedJob.title,
+            clientName: clientName,
+            salePrice: salePrice,
+            totalCost: parseFloat(costs.totalCost),
+            paymentStatus: paymentStatus
+          });
+        } else {
+          await store.addSale({
+            jobId: id,
+            jobTitle: updatedJob.title,
+            clientName: clientName,
+            salePrice: salePrice,
+            totalCost: parseFloat(costs.totalCost),
+            paymentStatus: paymentStatus,
+            date: updatedJob.date
+          });
+        }
+      }
+
       closeModal();
       renderJobs(...getJobFilters());
     });
@@ -1000,16 +1250,19 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('form-edit-sale')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const id = document.getElementById('edit-sale-id').value;
+      const jobId = document.getElementById('edit-sale-job-id')?.value || null;
       await store.updateSale(id, {
+        jobId: jobId,
         jobTitle: document.getElementById('edit-sale-title').value,
         clientName: document.getElementById('edit-sale-client').value,
-        salePrice: parseFloat(document.getElementById('edit-sale-price').value) || 0,
-        totalCost: parseFloat(document.getElementById('edit-sale-cost').value) || 0,
+        salePrice: parseFloat(document.getElementById('sale-price')?.value || document.getElementById('edit-sale-price').value) || 0,
+        totalCost: parseFloat(document.getElementById('sale-cost')?.value || document.getElementById('edit-sale-cost').value) || 0,
         paymentStatus: document.getElementById('edit-sale-payment-status').value,
         date: document.getElementById('edit-sale-date').value
       });
       closeModal();
       renderSales(...getSaleFilters());
+      renderJobs(...getJobFilters());
     });
 
     // Settings Form

@@ -121,6 +121,7 @@ class Store {
       if (resV.data && !resV.error) {
         this.data.sales = resV.data.map(v => ({
           id: v.id,
+          jobId: v.job_id || null,
           jobTitle: v.job_title,
           clientName: v.client_name,
           salePrice: parseFloat(v.sale_price) || 0,
@@ -222,6 +223,7 @@ class Store {
       if (this.data.sales && this.data.sales.length > 0) {
         const vRows = this.data.sales.map(v => ({
           id: v.id,
+          job_id: v.jobId || null,
           job_title: v.jobTitle,
           client_name: v.clientName,
           sale_price: v.salePrice,
@@ -230,7 +232,12 @@ class Store {
           payment_status: v.paymentStatus,
           date: v.date || new Date().toISOString().split('T')[0]
         }));
-        const { error } = await this.supabase.from('sales').upsert(vRows, { onConflict: 'id' });
+        let { error } = await this.supabase.from('sales').upsert(vRows, { onConflict: 'id' });
+        if (error && error.message && error.message.includes('job_id')) {
+          const vRowsFallback = vRows.map(r => { const c = {...r}; delete c.job_id; return c; });
+          const retry = await this.supabase.from('sales').upsert(vRowsFallback, { onConflict: 'id' });
+          error = retry.error;
+        }
         if (error) {
           console.error('Error al subir ventas a Supabase:', error.message || error);
           hasError = true;
@@ -534,11 +541,44 @@ class Store {
     }
   }
 
+  getJob(id) { return this.data.jobs.find(j => j.id === id); }
+
+  getSaleForJob(jobId) {
+    if (!jobId) return null;
+    return this.data.sales.find(s => s.jobId === jobId);
+  }
+
+  calculateJobCost(jobOrId) {
+    const job = typeof jobOrId === 'string' ? this.getJob(jobOrId) : jobOrId;
+    if (!job) return { materialCost: '0.00', electricityCost: '0.00', wearCost: '0.00', labourCost: '0.00', totalCost: '0.00', profitAmount: '0.00', suggestedPrice: '0.00' };
+
+    const spool = this.getSpool(job.spoolId) || { cost: 20, initialWeight: 1000 };
+    const printer = this.getPrinter(job.printerId) || { wattage: 200 };
+    const settings = this.getSettings();
+
+    if (window.CostCalculator) {
+      return window.CostCalculator.calculate({
+        spoolCost: spool.cost || 20,
+        spoolWeightGrams: spool.initialWeight || 1000,
+        jobWeightGrams: job.weightGrams || 0,
+        printHours: job.printTimeHours || 0,
+        printerWattage: printer.wattage || 200,
+        electricityRateKwh: settings.electricityCostPerKwh || 0.18,
+        wearCostPerHour: settings.wearCostPerHour || 0.25,
+        labourTimeHours: job.labourHours || 0,
+        labourRatePerHour: settings.labourCostPerHour || 5.0,
+        profitMarginPercent: settings.defaultMargin || 40
+      });
+    }
+    return { materialCost: '0.00', electricityCost: '0.00', wearCost: '0.00', labourCost: '0.00', totalCost: '0.00', profitAmount: '0.00', suggestedPrice: '0.00' };
+  }
+
   // --- VENTAS ---
   getSales() { return this.data.sales; }
 
   async addSale(sale) {
     sale.id = sale.id || ('v_' + Date.now());
+    sale.jobId = sale.jobId || null;
     sale.date = sale.date || new Date().toISOString().split('T')[0];
     sale.profit = parseFloat((sale.salePrice - sale.totalCost).toFixed(2));
     this.data.sales.unshift(sale);
@@ -548,6 +588,7 @@ class Store {
       try {
         const { error } = await this.supabase.from('sales').insert([{
           id: sale.id,
+          job_id: sale.jobId || null,
           job_title: sale.jobTitle,
           client_name: sale.clientName,
           sale_price: sale.salePrice,
@@ -582,6 +623,7 @@ class Store {
     if (this.useSupabase) {
       try {
         const { error } = await this.supabase.from('sales').update({
+          job_id: sale.jobId || null,
           job_title: sale.jobTitle,
           client_name: sale.clientName,
           sale_price: sale.salePrice,

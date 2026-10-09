@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS jobs (
 -- 4. Tabla de Ventas y Cotizaciones
 CREATE TABLE IF NOT EXISTS sales (
   id TEXT PRIMARY KEY,
+  job_id TEXT REFERENCES jobs(id) ON DELETE SET NULL,
   job_title TEXT NOT NULL,
   client_name TEXT NOT NULL,
   sale_price NUMERIC DEFAULT 0.00,
@@ -76,4 +77,6 @@ CREATE POLICY "Acceso total anonimo para sales" ON sales FOR ALL USING (true);
 ALTER TABLE spools ADD COLUMN IF NOT EXISTS nozzle_temp TEXT;
 ALTER TABLE spools ADD COLUMN IF NOT EXISTS bed_temp TEXT;
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS labour_hours NUMERIC DEFAULT 0;
+ALTER TABLE sales ADD COLUMN IF NOT EXISTS job_id TEXT;
+
 
